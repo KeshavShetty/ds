@@ -93,7 +93,7 @@ def fit(df, dependent_column,
     columns_to_use_further = columns_to_use_further.tolist()
     
     comment = 'After RFE(' + str(max_features_to_select) + ")" + str(columns_to_use_further)
-    model_iteration_info = pd.DataFrame( columns=['Comment','R2(train)', 'AdjR2(train)', 'RMSE(test)', 'R2(test)'])
+    model_iteration_info = pd.DataFrame( columns=['comment','r2_train', 'r2_adj_train', 'rmse_test', 'r2_test'])
     model_iteration=0
     prev_adj_r2 = 1
     column_to_remove = ""
