@@ -12,12 +12,13 @@ def calculate_vif(input_data, exclude_columns=[]):
     vif_df = pd.DataFrame( columns=['Feature','Vif'])
     x_vars = input_data.drop(exclude_columns, axis=1)
     xvar_names = x_vars.columns
-    for i in range(0,xvar_names.shape[0]):
-        y=x_vars[xvar_names[i]]
-        x=x_vars[xvar_names.drop(xvar_names[i])]
-        rsq=sm.OLS(y,x).fit().rsquared
-        vif=round(1/(1-rsq),2)
-        vif_df.loc[i]=[xvar_names[i],vif]
+    if len(xvar_names)>1: # Atlease 2 x column should be there to calculate vif
+        for i in range(0,xvar_names.shape[0]):
+            y=x_vars[xvar_names[i]]
+            x=x_vars[xvar_names.drop(xvar_names[i])]        
+            rsq=sm.OLS(y,x).fit().rsquared
+            vif=round(1/(1-rsq),2)
+            vif_df.loc[i]=[xvar_names[i],vif]
     return vif_df.sort_values(by='Vif', axis=0, ascending=False, inplace=False)
 
 def standardize(x):
