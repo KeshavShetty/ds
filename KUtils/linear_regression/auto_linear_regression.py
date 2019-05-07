@@ -24,6 +24,29 @@ def calculate_vif(input_data, exclude_columns=[]):
 def standardize(x):
     return ((x-np.mean(x))/np.std(x))
 
+def createDummies(df, dummies_creation_drop_column_preference='dropFirst') :
+    ## Convert Categorical variables 
+    df_categorical = df.select_dtypes(include=['object', 'category'])
+    
+    categorical_column_names = df_categorical.columns
+    
+    for aCatColumnName in categorical_column_names:
+        print(aCatColumnName)
+        dummy_df = pd.get_dummies(df[aCatColumnName], prefix=aCatColumnName)
+    
+        if dummies_creation_drop_column_preference=='dropFirst' :
+            dummy_df = dummy_df.drop(dummy_df.columns[0], 1)
+        elif dummies_creation_drop_column_preference=='dropMax' :
+            column_with_max_records = aCatColumnName + "_" + df[aCatColumnName].value_counts().idxmax()
+            dummy_df = dummy_df.drop(column_with_max_records, 1)
+        elif dummies_creation_drop_column_preference=='dropMin' :
+            column_with_min_records = aCatColumnName + "_" + df[aCatColumnName].value_counts().idxmin()
+            dummy_df = dummy_df.drop(column_with_min_records, 1)
+        else :
+            raise Exception('Invalid value passed for dummies_creation_drop_column_preference. Valid options are: dropFirst, dropMax, dropMin')
+        df = pd.concat([df, dummy_df], axis=1)
+        df.drop([aCatColumnName], axis=1, inplace=True)
+    return df
 
 def fit(df, dependent_column,
         p_value_cutoff = 0.01,
@@ -48,26 +71,10 @@ def fit(df, dependent_column,
     ## Convert Categorical variables 
     df_categorical = data_for_auto_lr.select_dtypes(include=['object', 'category'])
     
-    categorical_column_names = df_categorical.columns
     numerical_column_names =  [i for i in data_for_auto_lr.columns if not i in df_categorical.columns] 
-    
-    for aCatColumnName in categorical_column_names:
-        print(aCatColumnName)
-        dummy_df = pd.get_dummies(data_for_auto_lr[aCatColumnName])
-    
-        if dummies_creation_drop_column_preference=='dropFirst' :
-            dummy_df = dummy_df.drop(dummy_df.columns[0], 1)
-        elif dummies_creation_drop_column_preference=='dropMax' :
-            column_with_max_records = data_for_auto_lr[aCatColumnName].value_counts().idxmax()
-            dummy_df = dummy_df.drop(column_with_max_records, 1)
-        elif dummies_creation_drop_column_preference=='dropMin' :
-            column_with_min_records = data_for_auto_lr[aCatColumnName].value_counts().idxmin()
-            dummy_df = dummy_df.drop(column_with_min_records, 1)
-        else :
-            raise Exception('Invalid value passed for dummies_creation_drop_column_preference. Valid options are: dropFirst, dropMax, dropMin')
-        data_for_auto_lr = pd.concat([data_for_auto_lr, dummy_df], axis=1)
-        data_for_auto_lr.drop([aCatColumnName], axis=1, inplace=True)
-    
+    print('vefore dummies='+str(data_for_auto_lr.columns))
+    data_for_auto_lr = createDummies(data_for_auto_lr, dummies_creation_drop_column_preference)
+    print('after dummies='+str(data_for_auto_lr.columns))
     ## Scale numerical Feature scaling
     scaler = StandardScaler()
     if scale_numerical:
