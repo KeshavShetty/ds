@@ -120,7 +120,7 @@ def multi_continuous_continuous_continuous_category_scatterplot(df, continuous1,
     cat_unique_list = list(df[category4].unique())
     
     idx = [cat_unique_list.index(x) for x in cat_unique_list]
-    colors = [base_color_list[i] for i in idx]
+    colors = [base_color_list[i % len(base_color_list) ] for i in idx]
     color_dict = dict(zip(cat_unique_list, colors))
 
     fig = plt.figure(figsize=(8,8))
