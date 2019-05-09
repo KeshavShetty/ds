@@ -5,6 +5,15 @@ import seaborn as sns
 import numpy as np
 import pandas as pd
 
+# For 3D charts
+from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.patches as mpatches
+from matplotlib.cm import cool
+
+
+base_color_list = ['green', 'red', 'blue', 'orange', 'purple', 'brown', 'pink', 'gray', 'olive', 'cyan']
+
+
 save_images = False
 default_image_save_location = "d:\\temp\\plots"
 default_dpi = 100
@@ -80,9 +89,6 @@ def bi_continuous_category_boxplot(df, continuous1, category2):
 
 def multi_continuous_continuous_category_scatterplot(df, column_name1, column_name2, column_name3): 
     sns.scatterplot(data=df, x=column_name1, y=column_name2, hue=column_name3)
-    
-    
-    
     if save_images:
         plt.savefig(default_image_save_location + "\\Multi Continuous Continuous Category Scatterplot-" +column_name1+" " + column_name2 + ".png", dpi = default_dpi)    
 
@@ -103,7 +109,58 @@ def bi_continuous_category_violinplot(df, category1, continuous2) :
 def multi_continuous_category_category_violinplot(df, continuous1, category_column2, category_column3):
     sns.violinplot(y=continuous1, x=category_column2, hue=category_column3, data=df, split=True, palette='muted')
 
+def scaleTo01(x):
+    return ((x-min(x))/(max(x)-min(x)))
+
+def get_n_colors(n):
+    return[ cool(float(i)/n) for i in range(n) ]
     
+def multi_continuous_continuous_continuous_category_scatterplot(df, continuous1, continuous2, continuous3, category4):
+    
+    cat_unique_list = list(df[category4].unique())
+    
+    idx = [cat_unique_list.index(x) for x in cat_unique_list]
+    colors = [base_color_list[i] for i in idx]
+    color_dict = dict(zip(cat_unique_list, colors))
+
+    fig = plt.figure(figsize=(8,8))
+    ax = Axes3D(fig)
+    # ax = plt.axes(projection='3d')
+    
+    ax.scatter(df[continuous1], df[continuous2], df[continuous3],  c=df[category4].map(color_dict))
+    ax.set_xlabel(continuous1)
+    ax.set_ylabel(continuous2)
+    ax.set_zlabel(continuous3)
+    ax.invert_yaxis()
+
+    # Add legend with proxy artists
+    column_pathces = [mpatches.Patch(color=colors[x], label=cat_unique_list[x]) for x in idx]
+    plt.legend(handles=column_pathces, title=category4)
+    
+
+def multi_continuous_continuous_continuous_scatterplot(df, continuous1, continuous2, continuous3, maintain_same_color_palette=False):
+    fig = plt.figure(figsize=(8,8))
+    ax = Axes3D(fig)
+    # ax = plt.axes(projection='3d')
+    colors_df = df[[continuous1, continuous2, continuous3]]
+    colors_df.columns = ['red', 'green', 'blue']
+    if maintain_same_color_palette:
+        if max(colors_df['red'])-min(colors_df['red']) > max(colors_df['green'])-min(colors_df['green']):
+            colors_df = colors_df.rename(columns={'red': 'green', 'green': 'red'})    
+            colors_df.head()
+        if max(colors_df['red'])-min(colors_df['red']) > max(colors_df['blue'])-min(colors_df['blue']):
+            colors_df = colors_df.rename(columns={'red': 'blue', 'blue': 'red'})    
+            colors_df.head()
+        if max(colors_df['green'])-min(colors_df['green']) > max(colors_df['blue'])-min(colors_df['blue']):
+            colors_df = colors_df.rename(columns={'green': 'blue', 'blue': 'green'})    
+            colors_df.head()
+    colors_df = colors_df[['red','green','blue']].apply(scaleTo01)
+    colors_array = colors_df.values    
+    ax.scatter(df[continuous1], df[continuous2], df[continuous3],  facecolors=colors_array)
+    ax.set_xlabel(continuous1)
+    ax.set_ylabel(continuous2)
+    ax.set_zlabel(continuous3)
+    ax.invert_yaxis()
     
 def univariate_charts(data_frame):
     for column_name in data_frame.columns:        
