@@ -18,6 +18,73 @@ save_images = False
 default_image_save_location = "d:\\temp\\plots"
 default_dpi = 100
   
+def plot(df, column_list, chart_type=None, optional_settings={}):    
+    # Categorical column names
+    categorical_columns = df[column_list].select_dtypes(include=['category', object]).columns.tolist()
+    # Numerical/Continous column names 
+    numerical_columns = [item for item in column_list if item not in categorical_columns]
+    
+    if chart_type=='heatmap' or len(numerical_columns)>4 :
+        local_heatmap(df.corr(), numerical_columns)
+    else :  
+        if len(column_list)==1: # Univariate
+            if len(categorical_columns)>0 : 
+                uni_category_barchart(df,column_list[0])
+            else: # Dtype numeric or contnous variable
+                if chart_type=='barchart': # Even though it is numerical you are forcing to use barchart using binning
+                    no_of_bins = 10    
+                    start_idx = min(df[column_list[0]])
+                    end_idx = max(df[column_list[0]])
+                    step = (end_idx - start_idx)/no_of_bins
+                    bin_labels = np.arange(start_idx, end_idx, step).tolist()
+                    temp_column_name = 'tmp_'+column_list[0]
+                    df[temp_column_name] = pd.cut(df[column_list[0]], no_of_bins, labels=bin_labels )
+                    uni_category_barchart(df,temp_column_name)
+                    del df[temp_column_name]
+                elif chart_type=='distplot':
+                    uni_continuous_distplot(df,column_list[0])
+                else: # else boxplot
+                    uni_continuous_boxplot(df,column_list[0]) # Default boxplot
+        elif len(column_list)==2: # Bivariate or Segmented Univariate
+            if len(categorical_columns)==2 : # Both are categorical
+                if chart_type=='crosstab': # Percentage
+                    bi_category_category_crosstab_percentage(df, categorical_columns[0], categorical_columns[1])
+                elif chart_type=='stacked_barchart': # Stacked barchart
+                    bi_category_category_stacked_barchart(df, categorical_columns[0], categorical_columns[1])
+                else:
+                    bi_category_category_countplot(df, categorical_columns[0], categorical_columns[1])
+            elif len(numerical_columns)==2 : # Both are continous variable
+                # Scatter plot
+                bi_continuous_continuous_scatterplot(df,column_list[0], column_list[1], chart_type)
+            else: # One is continous and other is categorical
+                if chart_type=='distplot' :
+                    bi_continuous_category_distplot(df, numerical_columns[0], categorical_columns[0])
+                else:
+                    bi_continuous_category_boxplot(df, numerical_columns[0], categorical_columns[0])
+                # Todo: What about other combination? category vs continuous
+        elif len(column_list)==3: # Multi variate with three variables
+            if len(numerical_columns)==3 : # All continous, plot 3D scatterplot
+                multi_continuous_continuous_continuous_scatterplot(df, numerical_columns[0], numerical_columns[1], numerical_columns[2] )
+            elif len(categorical_columns)==3: # All categoruical
+                print('Todo')
+                # Todo:
+            elif len(numerical_columns)==2:
+                multi_continuous_continuous_category_scatterplot(df, numerical_columns[0], numerical_columns[1], categorical_columns[0])
+            elif len(numerical_columns)==1:
+                if chart_type=='violinplot': 
+                    multi_continuous_category_category_violinplot(df, numerical_columns[0], categorical_columns[0], categorical_columns[1])
+                else : 
+                    multi_continuous_category_category_boxplot(df, numerical_columns[0], categorical_columns[0], categorical_columns[1])
+                    # Todo: Any other combinations?
+        elif len(column_list)==4:
+            if len(numerical_columns)==3 :
+                multi_continuous_continuous_continuous_category_scatterplot(df, numerical_columns[0], numerical_columns[1], numerical_columns[2], categorical_columns[0])
+                # Todo: other combinations? 
+            
+def local_heatmap(df, column_list) :
+    sns.heatmap(df[column_list].corr(), annot=True) 
+
+
 def add_value_labels(ax, spacing=5):
     """Add labels to the end of each bar in a bar chart.
 
@@ -77,16 +144,31 @@ def uni_continuous_boxplot(df, column_name):
     sns.boxplot(y=df[column_name])    
     if save_images:
         plt.savefig(default_image_save_location + "\\Uni Continuous Boxplot-" +column_name+ ".png")
+        
+def uni_continuous_distplot(df, column_name):
+    sns.distplot(df[column_name]) 
+    if save_images:
+        plt.savefig(default_image_save_location + "\\Uni Continuous Boxplot-" +column_name+ ".png")
+        
 
-def bi_continuous_continuous_scatterplot(df, column_name1, column_name2):
-    sns.scatterplot(data=df, x=column_name1, y=column_name2)   
+def bi_continuous_continuous_scatterplot(df, column_name1, column_name2, chart_type=None):
+    if chart_type=='regplot':
+        sns.regplot(data=df, x=column_name1, y=column_name2)
+    else:
+        sns.scatterplot(data=df, x=column_name1, y=column_name2)
     if save_images:
         plt.savefig(default_image_save_location + "\\Bi Continuous Continuous Scatterplot-" +column_name1+" " + column_name2 + ".png")    
 
 def bi_continuous_category_boxplot(df, continuous1, category2): 
     sns.boxplot(y=continuous1, x=category2, data=df)
 
-
+def bi_continuous_category_distplot(df, continuous1, category2): 
+    
+    cat_unique_list = list(df[category2].unique())
+    for col in cat_unique_list:
+        subset = df[df[category2] == col]
+        sns.distplot(subset[continuous1], hist = False, kde = True, kde_kws = {'shade': True, 'linewidth': 3}, label = col)
+    
 def multi_continuous_continuous_category_scatterplot(df, column_name1, column_name2, column_name3): 
     sns.scatterplot(data=df, x=column_name1, y=column_name2, hue=column_name3)
     if save_images:
@@ -99,6 +181,11 @@ def multi_continuous_category_category_boxplot(df, continuous1, category2, categ
 def bi_category_category_crosstab_percentage(df, category_column1, category_column2) :
     ct=pd.crosstab(df[category_column1], df[category_column2])
     ct.div(ct.sum(1).astype(float), axis=0).plot(kind="bar", stacked=True)
+    
+def bi_category_category_stacked_barchart(df, category_column1, category_column2) :   
+    df.groupby([category_column1, category_column2]).size().unstack().plot.bar(stacked=True)
+ 
+ 
     
 def bi_category_category_countplot(df, category_column1, category_column2) :
     sns.countplot(x=category_column1, hue=category_column2, data=df)
