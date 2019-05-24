@@ -1,3 +1,35 @@
+"""
+Single API approach for daytoday EDA charting requirements
+Chart + Util = chartil
+
+Invoking
+| import KUtils.chartil as chartil
+
+Entry api/function (Usage)
+| chartilc.plot(dataframe, [list of column names])
+
+Other available functions
+| uni_category_barchart(df, column_name, limit_bars_count_to=10000, order_by_label=False)
+| uni_continuous_boxplot(df, column_name)
+| uni_continuous_distplot(df, column_name)
+| 
+| bi_continuous_continuous_scatterplot(df, column_name1, column_name2, chart_type=None)
+| bi_continuous_category_boxplot(df, continuous1, category2)
+| bi_continuous_category_distplot(df, continuous1, category2)
+| bi_category_category_crosstab_percentage(df, category_column1, category_column2)
+| bi_category_category_stacked_barchart(df, category_column1, category_column2)
+| bi_category_category_countplot(df, category_column1, category_column2)
+| bi_continuous_category_violinplot(df, category1, continuous2)
+| 
+| multi_continuous_category_category_violinplot(df, continuous1, category_column2, category_column3)
+| multi_continuous_continuous_category_scatterplot(df, column_name1, column_name2, column_name3)
+| multi_continuous_category_category_boxplot(df, continuous1, category2, category3)
+| multi_continuous_continuous_continuous_category_scatterplot(df, continuous1, continuous2, continuous3, category4)
+| multi_continuous_continuous_continuous_scatterplot(df, continuous1, continuous2, continuous3, maintain_same_color_palette=False)
+
+
+"""
+
 # Import matplotlib & seaborn for charting/plotting
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -29,7 +61,7 @@ def plot(df, column_list, chart_type=None, optional_settings={}):
     else :  
         if len(column_list)==1: # Univariate
             if len(categorical_columns)>0 : 
-                uni_category_barchart(df,column_list[0])
+                uni_category_barchart(df,column_list[0], optional_settings)
             else: # Dtype numeric or contnous variable
                 if chart_type=='barchart': # Even though it is numerical you are forcing to use barchart using binning
                     no_of_bins = 10    
@@ -39,7 +71,7 @@ def plot(df, column_list, chart_type=None, optional_settings={}):
                     bin_labels = np.arange(start_idx, end_idx, step).tolist()
                     temp_column_name = 'tmp_'+column_list[0]
                     df[temp_column_name] = pd.cut(df[column_list[0]], no_of_bins, labels=bin_labels )
-                    uni_category_barchart(df,temp_column_name)
+                    uni_category_barchart(df,temp_column_name, optional_settings)
                     del df[temp_column_name]
                 elif chart_type=='distplot':
                     uni_continuous_distplot(df,column_list[0])
@@ -125,8 +157,16 @@ def add_value_labels(ax, spacing=5):
             va=va)                      # Vertically align label differently for
                                         # positive and negative values.
 
-def uni_category_barchart(df, column_name, limit_bars_count_to=10000, order_by_label=False):
-    
+def uni_category_barchart(df, column_name, optional_settings={}): 
+    # limit_bars_count_to=10000, order_by_label=False):
+    limit_bars_count_to = 1000
+    if optional_settings.get('limit_bars_count_to')!=None:
+        limit_bars_count_to = optional_settings.get('limit_bars_count_to')
+        
+    order_by_label=False
+    if optional_settings.get('order_by_label')!=None:
+        order_by_label = optional_settings.get('order_by_label')
+        
     data_for_chart = df[column_name].value_counts(dropna=False)[:limit_bars_count_to]
     if order_by_label:
         data_for_chart = data_for_chart.sort_index()
