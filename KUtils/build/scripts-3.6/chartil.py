@@ -9,7 +9,7 @@ Entry api/function (Usage)
 | chartilc.plot(dataframe, [list of column names])
 
 Other available functions
-| uni_category_barchart(df, column_name, limit_bars_count_to=10000, sort_by_value=False)
+| uni_category_barchart(df, column_name, limit_bars_count_to=10000, order_by_label=False)
 | uni_continuous_boxplot(df, column_name)
 | uni_continuous_distplot(df, column_name)
 | 
@@ -42,7 +42,6 @@ from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.patches as mpatches
 from matplotlib.cm import cool
 
-from KUtils.common import utils
 
 base_color_list = ['green', 'red', 'blue', 'orange', 'purple', 'brown', 'pink', 'gray', 'olive', 'cyan']
 
@@ -58,17 +57,14 @@ def plot(df, column_list, chart_type=None, optional_settings={}):
     numerical_columns = [item for item in column_list if item not in categorical_columns]
     
     if chart_type=='heatmap' or len(numerical_columns)>4 :
-        local_heatmap(df, numerical_columns, optional_settings)
+        local_heatmap(df.corr(), numerical_columns)
     else :  
         if len(column_list)==1: # Univariate
             if len(categorical_columns)>0 : 
                 uni_category_barchart(df,column_list[0], optional_settings)
             else: # Dtype numeric or contnous variable
                 if chart_type=='barchart': # Even though it is numerical you are forcing to use barchart using binning
-                    no_of_bins = 10 
-                    if optional_settings.get('no_of_bins')!=None:
-                        no_of_bins = optional_settings.get('no_of_bins')
-                        
+                    no_of_bins = 10    
                     start_idx = min(df[column_list[0]])
                     end_idx = max(df[column_list[0]])
                     step = (end_idx - start_idx)/no_of_bins
@@ -101,7 +97,7 @@ def plot(df, column_list, chart_type=None, optional_settings={}):
         elif len(column_list)==3: # Multi variate with three variables
             if len(numerical_columns)==3 : # All continous, plot 3D scatterplot
                 multi_continuous_continuous_continuous_scatterplot(df, numerical_columns[0], numerical_columns[1], numerical_columns[2] )
-            elif len(categorical_columns)==3: # All categorical
+            elif len(categorical_columns)==3: # All categoruical
                 print('Todo')
                 # Todo:
             elif len(numerical_columns)==2:
@@ -117,24 +113,8 @@ def plot(df, column_list, chart_type=None, optional_settings={}):
                 multi_continuous_continuous_continuous_category_scatterplot(df, numerical_columns[0], numerical_columns[1], numerical_columns[2], categorical_columns[0])
                 # Todo: other combinations? 
             
-def local_heatmap(df, column_list, optional_settings={}) :
-    include_categorical = False
-    if optional_settings.get('include_categorical')!=None:
-        include_categorical = optional_settings.get('include_categorical')
-    
-    figuresize_width = (int)(0.80*len(column_list))
-    figuresize_height = (int)(figuresize_width*.75)
-    plt.figure(figsize=(figuresize_width,figuresize_height))
-        
-    if include_categorical:
-        df = utils.createDummies(df)
-        new_column_list = df.columns.tolist() 
-        figuresize_width = (int)(0.75*len(new_column_list))
-        figuresize_height = (int)(figuresize_width*.66)
-        plt.figure(figsize=(figuresize_width,figuresize_height))
-        sns.heatmap(df[new_column_list].corr(), annot=True)
-    else :
-        sns.heatmap(df[column_list].corr(), annot=True) 
+def local_heatmap(df, column_list) :
+    sns.heatmap(df[column_list].corr(), annot=True) 
 
 
 def add_value_labels(ax, spacing=5):
@@ -178,17 +158,17 @@ def add_value_labels(ax, spacing=5):
                                         # positive and negative values.
 
 def uni_category_barchart(df, column_name, optional_settings={}): 
-    # limit_bars_count_to=10000, sort_by_value=False):
+    # limit_bars_count_to=10000, order_by_label=False):
     limit_bars_count_to = 1000
     if optional_settings.get('limit_bars_count_to')!=None:
         limit_bars_count_to = optional_settings.get('limit_bars_count_to')
         
-    sort_by_value=False
-    if optional_settings.get('sort_by_value')!=None:
-        sort_by_value = optional_settings.get('sort_by_value')
+    order_by_label=False
+    if optional_settings.get('order_by_label')!=None:
+        order_by_label = optional_settings.get('order_by_label')
         
     data_for_chart = df[column_name].value_counts(dropna=False)[:limit_bars_count_to]
-    if sort_by_value==False: # Use label as sorting
+    if order_by_label:
         data_for_chart = data_for_chart.sort_index()
             
     ax = data_for_chart.plot(kind='bar',
