@@ -1,14 +1,13 @@
 import numpy as np
 import pandas as pd
 
-def createDummies(df, dummies_creation_drop_column_preference='dropFirst') :
+def createDummies(df, dummies_creation_drop_column_preference='dropFirst', max_unique_values_dummies=1000) :
     ## Convert Categorical variables 
     df_categorical = df.select_dtypes(include=['object', 'category'])
     
     categorical_column_names = df_categorical.columns
     
-    for aCatColumnName in categorical_column_names:
-        print(aCatColumnName)
+    for aCatColumnName in categorical_column_names:        
         dummy_df = pd.get_dummies(df[aCatColumnName], prefix=aCatColumnName)
     
         if dummies_creation_drop_column_preference=='dropFirst' :

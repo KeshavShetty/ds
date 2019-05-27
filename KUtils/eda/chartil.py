@@ -124,17 +124,25 @@ def local_heatmap(df, column_list, optional_settings={}) :
     
     figuresize_width = (int)(0.80*len(column_list))
     figuresize_height = (int)(figuresize_width*.75)
-    plt.figure(figsize=(figuresize_width,figuresize_height))
         
     if include_categorical:
         df = utils.createDummies(df)
-        new_column_list = df.columns.tolist() 
-        figuresize_width = (int)(0.75*len(new_column_list))
+        column_list = df.columns.tolist() 
+        figuresize_width = (int)(0.75*len(column_list))
         figuresize_height = (int)(figuresize_width*.66)
-        plt.figure(figsize=(figuresize_width,figuresize_height))
-        sns.heatmap(df[new_column_list].corr(), annot=True)
-    else :
-        sns.heatmap(df[column_list].corr(), annot=True) 
+    
+    plt.figure(figsize=(figuresize_width,figuresize_height))
+    
+    data_for_corelation = df[column_list].corr()
+    
+    if optional_settings.get('sort_by_column')!=None:
+        sort_by_column = optional_settings.get('sort_by_column')
+        #df_corr = heart_disease_df.corr()
+        sort_a_column = data_for_corelation[sort_by_column].sort_values()
+        data_for_corelation = data_for_corelation.reindex(sort_a_column.index)
+        data_for_corelation = data_for_corelation[sort_a_column.index]
+        
+    sns.heatmap(data_for_corelation, annot=True) 
 
 
 def add_value_labels(ax, spacing=5):
@@ -145,7 +153,11 @@ def add_value_labels(ax, spacing=5):
             of the plot to annotate.
         spacing (int): The distance between the labels and the bars.
     """
-
+    total_count = 0
+    for rect in ax.patches:
+        # Get X and Y placement of label from rect.
+        total_count = total_count + rect.get_height()
+      
     # For each bar: Place a label
     for rect in ax.patches:
         # Get X and Y placement of label from rect.
@@ -165,8 +177,10 @@ def add_value_labels(ax, spacing=5):
             va = 'top'
 
         # Use Y value as label and format number with one decimal place
-        label = "{:.1f}".format(y_value)
-
+        label_value = "{:.0f}".format(y_value)
+        label_percent = "{:.2f}".format(y_value*100/total_count)
+        
+        label = label_value + ' (' + label_percent + '%)'
         # Create annotation
         ax.annotate(
             label,                      # Use `label` as label
@@ -188,11 +202,15 @@ def uni_category_barchart(df, column_name, optional_settings={}):
         sort_by_value = optional_settings.get('sort_by_value')
         
     data_for_chart = df[column_name].value_counts(dropna=False)[:limit_bars_count_to]
+    no_of_bars = len(data_for_chart)
+    figuresize_width = 5+(int)(0.8*no_of_bars)
+    figuresize_height = 2 + (int)(figuresize_width*.5)
+    
     if sort_by_value==False: # Use label as sorting
         data_for_chart = data_for_chart.sort_index()
             
     ax = data_for_chart.plot(kind='bar',
-                                    figsize=(14,8),
+                                    figsize=(figuresize_width,figuresize_height),
                                     title="Uni Categorical [" +column_name+"]")
     ax.set_xlabel("Categories in [" + column_name + "]")
     ax.set_ylabel("No. of Records or Rows per Category")
