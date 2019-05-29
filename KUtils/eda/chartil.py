@@ -57,7 +57,7 @@ def plot(df, column_list, chart_type=None, optional_settings={}):
     # Numerical/Continous column names 
     numerical_columns = [item for item in column_list if item not in categorical_columns]
     
-    if chart_type=='heatmap' or len(numerical_columns)>4 :
+    if chart_type=='heatmap':
         local_heatmap(df, numerical_columns, optional_settings)
     else :  
         if len(column_list)==1: # Univariate
@@ -102,8 +102,7 @@ def plot(df, column_list, chart_type=None, optional_settings={}):
             if len(numerical_columns)==3 : # All continous, plot 3D scatterplot
                 multi_continuous_continuous_continuous_scatterplot(df, numerical_columns[0], numerical_columns[1], numerical_columns[2] )
             elif len(categorical_columns)==3: # All categorical
-                print('Todo')
-                # Todo:
+                multi_category_category_category_pairplot(df, categorical_columns[0], categorical_columns[1], categorical_columns[2] )                
             elif len(numerical_columns)==2:
                 multi_continuous_continuous_category_scatterplot(df, numerical_columns[0], numerical_columns[1], categorical_columns[0])
             elif len(numerical_columns)==1:
@@ -116,6 +115,14 @@ def plot(df, column_list, chart_type=None, optional_settings={}):
             if len(numerical_columns)==3 :
                 multi_continuous_continuous_continuous_category_scatterplot(df, numerical_columns[0], numerical_columns[1], numerical_columns[2], categorical_columns[0])
                 # Todo: other combinations? 
+        elif len(column_list)==5:
+            if len(numerical_columns)==2 :
+                multi_category_category_category_continuous_continuous_pairplot(df, categorical_columns[0], categorical_columns[1], categorical_columns[2],
+                                                                                numerical_columns[0], numerical_columns[1])
+            else :
+                local_heatmap(df, numerical_columns, optional_settings)
+        else :
+            local_heatmap(df, numerical_columns, optional_settings)
             
 def local_heatmap(df, column_list, optional_settings={}) :
     include_categorical = False
@@ -145,7 +152,7 @@ def local_heatmap(df, column_list, optional_settings={}) :
     sns.heatmap(data_for_corelation, annot=True) 
 
 
-def add_value_labels(ax, spacing=5):
+def add_value_labels(ax, spacing=5, include_percentage=True):
     """Add labels to the end of each bar in a bar chart.
 
     Arguments:
@@ -154,10 +161,11 @@ def add_value_labels(ax, spacing=5):
         spacing (int): The distance between the labels and the bars.
     """
     total_count = 0
-    for rect in ax.patches:
-        # Get X and Y placement of label from rect.
-        total_count = total_count + rect.get_height()
-      
+    if include_percentage:
+        for rect in ax.patches:
+            # Get X and Y placement of label from rect.
+            total_count = total_count + rect.get_height()
+          
     # For each bar: Place a label
     for rect in ax.patches:
         # Get X and Y placement of label from rect.
@@ -178,9 +186,11 @@ def add_value_labels(ax, spacing=5):
 
         # Use Y value as label and format number with one decimal place
         label_value = "{:.0f}".format(y_value)
-        label_percent = "{:.2f}".format(y_value*100/total_count)
-        
-        label = label_value + ' (' + label_percent + '%)'
+        if include_percentage:
+            label_percent = "{:.2f}".format(y_value*100/total_count)
+            label = label_value + ' (' + label_percent + '%)'
+        else:
+           label = label_value 
         # Create annotation
         ax.annotate(
             label,                      # Use `label` as label
@@ -190,7 +200,42 @@ def add_value_labels(ax, spacing=5):
             ha='center',                # Horizontally center label
             va=va)                      # Vertically align label differently for
                                         # positive and negative values.
-
+def core_barchart_from_series(aIndexSeries, optional_settings={}):
+    data_for_chart = aIndexSeries
+    
+    exclude_zero_column = False
+    if optional_settings.get('exclude_zero_column')!=None:
+        exclude_zero_column = optional_settings.get('exclude_zero_column')
+        
+    if exclude_zero_column==True :
+        data_for_chart = data_for_chart[data_for_chart!=0]
+        
+    sort_by_value=False
+    sort_by_value=False
+    if optional_settings.get('sort_by_value')!=None:
+        sort_by_value = optional_settings.get('sort_by_value')
+    
+    if sort_by_value==False: # Use label as sorting
+        data_for_chart = data_for_chart.sort_index()
+    else:
+        data_for_chart = data_for_chart.sort_values(ascending=False)
+        
+    limit_bars_count_to=10
+    
+    no_of_bars = len(data_for_chart)
+    figuresize_width = 5+(int)(0.8*no_of_bars)
+    figuresize_height = 3 + (int)(figuresize_width*.5)
+    
+    if sort_by_value==False: # Use label as sorting
+        data_for_chart = data_for_chart.sort_index()
+            
+    ax = data_for_chart.plot(kind='bar',
+                                    figsize=(figuresize_width,figuresize_height),
+                                    title=optional_settings.get('chart_title'))
+    ax.set_xlabel(optional_settings.get('x_label'))
+    ax.set_ylabel(optional_settings.get('y_label'))
+    add_value_labels(ax, include_percentage=False)
+    
 def uni_category_barchart(df, column_name, optional_settings={}): 
     # limit_bars_count_to=10000, sort_by_value=False):
     limit_bars_count_to = 1000
@@ -325,7 +370,7 @@ def multi_continuous_continuous_continuous_scatterplot(df, continuous1, continuo
     ax.set_xlabel(continuous1)
     ax.set_ylabel(continuous2)
     ax.set_zlabel(continuous3)
-    ax.invert_yaxis()
+    ax.invert_yaxis()    
     
 def univariate_charts(data_frame):
     for column_name in data_frame.columns:        
@@ -339,6 +384,12 @@ def univariate_charts(data_frame):
             print(column_name + 'Unknown')
             
             
-
+def multi_category_category_category_pairplot(df, category1, category2, category3):
+    grid = sns.FacetGrid(df, row=category1, col=category2, hue=category3, palette='seismic', size=4)
+    grid.map(sns.countplot,  category3)
+    grid.add_legend()
     
-    
+def multi_category_category_category_continuous_continuous_pairplot(df, 
+            category1, category2, category3, continuous1, continuous2):    
+    grid = sns.FacetGrid(df, row=category1, col=category2, hue=category3, palette='seismic', size=4)
+    g = (grid.map(sns.scatterplot,  continuous1, continuous2, edgecolor="w").add_legend())
