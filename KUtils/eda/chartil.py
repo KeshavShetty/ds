@@ -104,7 +104,7 @@ def plot(df, column_list, chart_type=None, optional_settings={}):
             elif len(categorical_columns)==3: # All categorical
                 multi_category_category_category_pairplot(df, categorical_columns[0], categorical_columns[1], categorical_columns[2] )                
             elif len(numerical_columns)==2:
-                multi_continuous_continuous_category_scatterplot(df, numerical_columns[0], numerical_columns[1], categorical_columns[0])
+                multi_continuous_continuous_category_scatterplot(df, numerical_columns[0], numerical_columns[1], categorical_columns[0], optional_settings)
             elif len(numerical_columns)==1:
                 if chart_type=='violinplot': 
                     multi_continuous_category_category_violinplot(df, numerical_columns[0], categorical_columns[0], categorical_columns[1])
@@ -292,8 +292,17 @@ def bi_continuous_category_distplot(df, continuous1, category2):
         subset = df[df[category2] == col]
         sns.distplot(subset[continuous1], hist = False, kde = True, kde_kws = {'shade': True, 'linewidth': 3}, label = col)
     
-def multi_continuous_continuous_category_scatterplot(df, column_name1, column_name2, column_name3): 
+def multi_continuous_continuous_category_scatterplot(df, column_name1, column_name2, column_name3, optional_settings={}): 
     sns.scatterplot(data=df, x=column_name1, y=column_name2, hue=column_name3)
+    
+    show_label = False
+    if optional_settings.get('show_label')!=None:
+        show_label = optional_settings.get('show_label')
+        
+    if show_label==True:
+        for i, txt in enumerate(df[column_name3]):
+            plt.annotate(txt, (df[column_name1][i], df[column_name2][i]))
+        
     if save_images:
         plt.savefig(default_image_save_location + "\\Multi Continuous Continuous Category Scatterplot-" +column_name1+" " + column_name2 + ".png", dpi = default_dpi)    
 
@@ -334,8 +343,8 @@ def multi_continuous_continuous_continuous_category_scatterplot(df, continuous1,
     color_dict = dict(zip(cat_unique_list, colors))
 
     fig = plt.figure(figsize=(8,8))
-    ax = Axes3D(fig)
-    # ax = plt.axes(projection='3d')
+    # ax = Axes3D(fig)
+    ax = plt.axes(projection='3d')
     
     ax.scatter(df[continuous1], df[continuous2], df[continuous3],  c=df[category4].map(color_dict))
     ax.set_xlabel(continuous1)
@@ -350,7 +359,8 @@ def multi_continuous_continuous_continuous_category_scatterplot(df, continuous1,
 
 def multi_continuous_continuous_continuous_scatterplot(df, continuous1, continuous2, continuous3, maintain_same_color_palette=False):
     fig = plt.figure(figsize=(8,8))
-    ax = Axes3D(fig)
+    ax = fig.add_subplot(111, projection='3d')
+    #ax = Axes3D(fig)
     # ax = plt.axes(projection='3d')
     colors_df = df[[continuous1, continuous2, continuous3]]
     colors_df.columns = ['red', 'green', 'blue']
@@ -393,3 +403,36 @@ def multi_category_category_category_continuous_continuous_pairplot(df,
             category1, category2, category3, continuous1, continuous2):    
     grid = sns.FacetGrid(df, row=category1, col=category2, hue=category3, palette='seismic', size=4)
     g = (grid.map(sns.scatterplot,  continuous1, continuous2, edgecolor="w").add_legend())
+    
+def multi_continuous_continuous_continuous_category_bubbleplot(df, continuous1, continuous2, continuous3, category1, maintain_same_color_palette=False):
+    fig = plt.figure(figsize=(8,8))
+    ax = fig.add_subplot(111, projection='3d')
+
+    #ax = Axes3D(fig)
+    # ax = plt.axes(projection='3d')
+    colors_df = df[[continuous1, continuous2, continuous3]]
+    colors_df.columns = ['red', 'green', 'blue']
+    if maintain_same_color_palette:
+        if max(colors_df['red'])-min(colors_df['red']) > max(colors_df['green'])-min(colors_df['green']):
+            colors_df = colors_df.rename(columns={'red': 'green', 'green': 'red'})    
+            colors_df.head()
+        if max(colors_df['red'])-min(colors_df['red']) > max(colors_df['blue'])-min(colors_df['blue']):
+            colors_df = colors_df.rename(columns={'red': 'blue', 'blue': 'red'})    
+            colors_df.head()
+        if max(colors_df['green'])-min(colors_df['green']) > max(colors_df['blue'])-min(colors_df['blue']):
+            colors_df = colors_df.rename(columns={'green': 'blue', 'blue': 'green'})    
+            colors_df.head()
+    colors_df = colors_df[['red','green','blue']].apply(scaleTo01)
+    colors_array = colors_df.values
+    
+    df['tmp_size'] = df[category1].astype('int')
+    df['tmp_size'] = 50*df['tmp_size'] + 2
+    ax.scatter(df[continuous1], df[continuous2], df[continuous3], s=df['tmp_size'], facecolors=colors_array)
+    
+        
+    ax.set_xlabel(continuous1)
+    ax.set_ylabel(continuous2)
+    ax.set_zlabel(continuous3)
+    ax.invert_yaxis() 
+    
+    
