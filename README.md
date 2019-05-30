@@ -61,7 +61,7 @@ chartil.plot(heart_disease_df, ['age_bin'], optional_settings={'sort_by_value':T
 
 # Bi Category vs Category (& Univariate Segmented)
 chartil.plot(heart_disease_df, ['sex', 'target'])
-![Bi Category](https://raw.githubusercontent.com/KeshavShetty/ds/master/Roughbook/misc_resources/bi_category.png)
+![Bi Category](https://raw.githubusercontent.com/KeshavShetty/ds/master/Roughbook/misc_resources/bi_category_bar.png)
 
 chartil.plot(heart_disease_df, ['sex', 'target'], chart_type='crosstab')
 ![Bi Category](https://raw.githubusercontent.com/KeshavShetty/ds/master/Roughbook/misc_resources/bi_category_cross_tab.png)
@@ -86,6 +86,7 @@ chartil.plot(heart_disease_df, ['chol', 'thalach', 'trestbps']) # Colored 3D sca
 
 # Multi 3 Categorical
 chartil.plot(heart_disease_df, ['age_bin', 'sex', 'target']) # Paired barchart
+![3 paired_3d_grouped_barchart](https://raw.githubusercontent.com/KeshavShetty/ds/master/Roughbook/misc_resources/paired_3d_grouped_barchart.png)
 
 # Multi 2 Continuous, 1 Category
 chartil.plot(heart_disease_df, ['chol', 'thalach', 'target']) # Scatter plot with colored groups 
