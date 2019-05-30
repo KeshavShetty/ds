@@ -17,7 +17,10 @@ from KUtils.eda import chartil
 Demo code:
 
 # Load UCI Dataset. Download [From here](https://archive.ics.uci.edu/ml/datasets/Heart+Disease/)
+```python
 heart_disease_df = pd.read_csv('../input/uci/heart.csv')
+```
+
 
 heart_disease_df['age_bin'] = pd.cut(heart_disease_df['age'], [0, 32, 40, 50, 60, 70, 100], labels=['<32', '33-40','41-50','51-60','61-70', '71+'])
 heart_disease_df['sex'] = heart_disease_df['sex'].map({1:'Male', 0:'Female'})
@@ -85,7 +88,7 @@ chartil.plot(heart_disease_df, ['chol', 'thalach', 'trestbps']) # Colored 3D sca
 ![3 Continuous 3D](https://raw.githubusercontent.com/KeshavShetty/ds/master/Roughbook/misc_resources/3continuous_3d.png)
 
 # Multi 3 Categorical
-chartil.plot(heart_disease_df, ['age_bin', 'sex', 'target']) # Paired barchart
+chartil.plot(heart_disease_df, ['sex', 'age_bin', 'target']) # Paired barchart
 ![3 paired_3d_grouped_barchart](https://raw.githubusercontent.com/KeshavShetty/ds/master/Roughbook/misc_resources/paired_3d_grouped_barchart.png)
 
 # Multi 2 Continuous, 1 Category
