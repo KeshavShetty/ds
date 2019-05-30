@@ -36,3 +36,8 @@ cm_combined_dataset['weekend_checkin_date'] = cm_combined_dataset['day_of_week_c
 
 # New column stay days from checkin and chekout
 cm_combined_dataset['stay_days'] = (cm_combined_dataset['checkout_date'] - cm_combined_dataset['checkin_date']).dt.days
+
+# Comnert multiple column to categorical
+column_to_convert_to_categorical = ['target', 'cp', 'fbs', 'exang', 'restecg', 'slope', 'ca', 'thal']
+for col in column_to_convert_to_categorical:
+    heart_disease_df[col] = heart_disease_df[col].astype('category')
