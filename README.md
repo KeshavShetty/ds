@@ -42,7 +42,8 @@ Demo code:
 	chartil.plot(heart_disease_df, heart_disease_df.columns, optional_settings={'include_categorical':True, 'sort_by_column':'trestbps'} ) 
 ![Heatmap With categorical and ordered by a column](https://raw.githubusercontent.com/KeshavShetty/ds/master/Roughbook/misc_resources/heatmap3.png)
 
-	chartil.plot(heart_disease_df, ['chol', 'thalach', 'trestbps'], chart_type='heatmap') # Force to plot heatmap when you have fewer columns, otherwise tool will decide as different chart
+	# Force to plot heatmap when you have fewer columns, otherwise tool will decide as different chart
+	chartil.plot(heart_disease_df, ['chol', 'thalach', 'trestbps'], chart_type='heatmap') 
 ![forced_heatmap](https://raw.githubusercontent.com/KeshavShetty/ds/master/Roughbook/misc_resources/forced_heatmap.png)
 
 # Uni-categorical          
