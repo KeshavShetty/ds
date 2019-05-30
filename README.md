@@ -1,3 +1,6 @@
+<details><summary>Chart + Util = Chartil (Click to expand)</summary>
+
+
 # Chart + Util = Chartil
 Data visualization: Simple, Single unified API for plotting and charting
 
@@ -121,3 +124,7 @@ Demo code:
 	chartil.plot(heart_disease_df, ['sex','cp','target','thalach','trestbps']) # Paired scatter plot
 ![Grouped Paired_3d_grouped_scatter](https://raw.githubusercontent.com/KeshavShetty/ds/master/Roughbook/misc_resources/paired_3d_grouped_scatter.png)
 
+</details>
+<details><summary>Auto Liner Regression (Click to expand)</summary>
+	Todo:
+</details>
