@@ -2,12 +2,12 @@
 Data visualization: Simple, Single unified API for plotting and charting
 
 During EDA/data preparation we use few common and fixed set of chart types to analyse the relation among various features. 
-Few are simple chart like univariate and some are complex 3D or even multiple features>3.
+Few are simple charts like univariate and some are complex 3D or even multiple features>3.
 
-This api is simple, single api to plot various type of relations which will hide all technical/code details from Data Science task and approch.
+This api is simple, single api to plot various type of relations which will hide all the technical/code details from Data Science task and approch.
 This overcomes the difficulties of maintaining several api or libraries and avoid repeated codes. 
 
-Using this approach we just need one api )Rest all decided by library)
+Using this approach we just need one api (Rest all decided by library)
 
 	from KUtils.eda import chartil
 
@@ -41,6 +41,9 @@ Demo code:
 
 	chartil.plot(heart_disease_df, heart_disease_df.columns, optional_settings={'include_categorical':True, 'sort_by_column':'trestbps'} ) 
 ![Heatmap With categorical and ordered by a column](https://raw.githubusercontent.com/KeshavShetty/ds/master/Roughbook/misc_resources/heatmap3.png)
+
+	chartil.plot(heart_disease_df, ['chol', 'thalach', 'trestbps'], chart_type='heatmap') # Force to plot heatmap when you have fewer columns, otherwise tool will decide as different chart
+![forced_heatmap](https://raw.githubusercontent.com/KeshavShetty/ds/master/Roughbook/misc_resources/forced_heatmap.png)
 
 # Uni-categorical          
 	chartil.plot(heart_disease_df, ['target']) # Barchart as count plot 
