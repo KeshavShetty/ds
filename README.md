@@ -120,11 +120,13 @@ Demo code:
 	chartil.plot(heart_disease_df, ['chol', 'thalach', 'trestbps', 'target']) # Group Color highlighted 3D plot
 ![Grouped 3d_scatter](https://raw.githubusercontent.com/KeshavShetty/ds/master/Roughbook/misc_resources/grouped_3d_scatter.png)
 
-# Multi 3 Continuous, 2 category
+# Multi 3 category, 2 Continuous
 	chartil.plot(heart_disease_df, ['sex','cp','target','thalach','trestbps']) # Paired scatter plot
 ![Grouped Paired_3d_grouped_scatter](https://raw.githubusercontent.com/KeshavShetty/ds/master/Roughbook/misc_resources/paired_3d_grouped_scatter.png)
 
 </details>
-<details><summary>Auto Liner Regression (Click to expand)</summary>
+
+
+<details><summary>Auto Linear Regression (Click to expand)</summary>
 	Todo:
 </details>

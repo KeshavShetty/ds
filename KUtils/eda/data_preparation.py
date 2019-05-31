@@ -20,11 +20,14 @@ def plotUnique(df, optional_settings={}):
     
 def plotNullInColumns(df, optional_settings={}):
     aSeries = df.isnull().sum() 
-    optional_settings.update({'exclude_zero_column':True})
-    optional_settings.update({'x_label':'Features'}) 
-    optional_settings.update({'y_label':'Missing Count'})
-    optional_settings.update({'chart_title':'Count of missing values in each Feature/Column'})
-    chartil.core_barchart_from_series(aSeries, optional_settings)
+    if sum(aSeries>0):
+        optional_settings.update({'exclude_zero_column':True})
+        optional_settings.update({'x_label':'Features'}) 
+        optional_settings.update({'y_label':'Missing Count'})
+        optional_settings.update({'chart_title':'Count of missing values in each Feature/Column'})
+        chartil.core_barchart_from_series(aSeries, optional_settings)
+    else:
+        print('Nothing to plot. All series value are 0')
 
 def plotNullInRows(df, optional_settings={}):
     no_of_columns = df.shape[1]
@@ -58,32 +61,36 @@ def cap_outliers_using_iqr(df, column_to_treat, lower_quantile=0.25, upper_quant
     iqr = q3 - q1
     lower_value = q1 - iqr_range*iqr
     upper_value = q3 + iqr_range*iqr
-    df[column_to_treat][df[column_to_treat]<lower_value] = lower_value
-    df[column_to_treat][df[column_to_treat]>upper_value] = upper_value  
-    return df
+    df.loc[df[column_to_treat]<lower_value, column_to_treat] = lower_value
+    df.loc[df[column_to_treat]>upper_value, column_to_treat] = upper_value
+    print('Done')
 
 def fill_category_column_na_with_new(df, column_name, na_column_name='Unknown'): 
     df[column_name].fillna(na_column_name, inplace=True)
-    return df
-
+    print('Done')
+    
 def fill_column_na_with_mode(df, column_name): # Can be applied to both categorical and numerical features
     df[column_name].fillna(df[column_name].mode()[0], inplace=True)
-
+    print('Done')
+    
 def fill_column_na_with_mean(df, column_name): 
     df[column_name].fillna(df[column_name].mean(), inplace=True)
+    print('Done')
     
 def drop_rows_with_na_in_column(df, column_name):
     df.dropna(subset=[column_name], how='all', inplace = True)
+    print('Done')
     
 def drop_rows_with_na_percentage_in_row(df, percent_value):
     colNulls = (df.isnull().sum(axis=1))*100/(df.shape[1])
-    df['nan_percentage']=colNulls
-    
+    df['nan_percentage']=colNulls    
     df.drop(df.index[df['nan_percentage'] >= percent_value], inplace = True)    
     df.drop(['nan_percentage'], axis=1, inplace=True) # nan_percentage No more required
+    print('Done')
     
 def cap_outliers_using_percentile(df, column_to_treat, lower_percent=2, upper_percent=98):
     upper_limit = np.percentile(df[column_to_treat], upper_percent) 
-    lower_limit = np.percentile(df[column_to_treat], lower_percent) # Filter the outliers from the dataframe
-    df[column_to_treat].loc[df[column_to_treat]>upper_limit] = upper_limit 
-    df[column_to_treat].loc[df[column_to_treat]<lower_limit] = lower_limit
+    lower_limit = np.percentile(df[column_to_treat], lower_percent) # Filter the outliers from the dataframe    
+    df.loc[df[column_to_treat]<lower_limit, column_to_treat] = lower_limit
+    df.loc[df[column_to_treat]>upper_limit, column_to_treat] = upper_limit
+    print('Done')

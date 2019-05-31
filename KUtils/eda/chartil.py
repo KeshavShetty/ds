@@ -113,7 +113,10 @@ def plot(df, column_list, chart_type=None, optional_settings={}):
                     # Todo: Any other combinations?
         elif len(column_list)==4:
             if len(numerical_columns)==3 :
-                multi_continuous_continuous_continuous_category_scatterplot(df, numerical_columns[0], numerical_columns[1], numerical_columns[2], categorical_columns[0])
+                if chart_type=='bubbleplot':
+                    multi_continuous_continuous_continuous_category_bubbleplot(df, numerical_columns[0], numerical_columns[1], numerical_columns[2], categorical_columns[0])
+                else:
+                    multi_continuous_continuous_continuous_category_scatterplot(df, numerical_columns[0], numerical_columns[1], numerical_columns[2], categorical_columns[0])
                 # Todo: other combinations? 
         elif len(column_list)==5:
             if len(numerical_columns)==2 :
@@ -425,8 +428,9 @@ def multi_continuous_continuous_continuous_category_bubbleplot(df, continuous1, 
     colors_df = colors_df[['red','green','blue']].apply(scaleTo01)
     colors_array = colors_df.values
     
-    df['tmp_size'] = df[category1].astype('int')
-    df['tmp_size'] = 50*df['tmp_size'] + 2
+    from sklearn import preprocessing
+    le = preprocessing.LabelEncoder()
+    df['tmp_size'] = le.fit_transform(df[category1])*50 + 2
     ax.scatter(df[continuous1], df[continuous2], df[continuous3], s=df['tmp_size'], facecolors=colors_array)
     
         

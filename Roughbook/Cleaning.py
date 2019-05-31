@@ -41,3 +41,7 @@ cm_combined_dataset['stay_days'] = (cm_combined_dataset['checkout_date'] - cm_co
 column_to_convert_to_categorical = ['target', 'cp', 'fbs', 'exang', 'restecg', 'slope', 'ca', 'thal']
 for col in column_to_convert_to_categorical:
     heart_disease_df[col] = heart_disease_df[col].astype('category')
+
+# Reload the library package function
+import importlib
+importlib.reload(module)
