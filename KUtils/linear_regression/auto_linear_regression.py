@@ -31,7 +31,7 @@ def createDummies(df, dummies_creation_drop_column_preference='dropFirst') :
     categorical_column_names = df_categorical.columns
     
     for aCatColumnName in categorical_column_names:
-        print(aCatColumnName)
+        #print(aCatColumnName)
         dummy_df = pd.get_dummies(df[aCatColumnName], prefix=aCatColumnName)
     
         if dummies_creation_drop_column_preference=='dropFirst' :
@@ -46,6 +46,7 @@ def createDummies(df, dummies_creation_drop_column_preference='dropFirst') :
             raise Exception('Invalid value passed for dummies_creation_drop_column_preference. Valid options are: dropFirst, dropMax, dropMin')
         df = pd.concat([df, dummy_df], axis=1)
         df.drop([aCatColumnName], axis=1, inplace=True)
+    print('Dummy creation done')
     return df
 
 def fit(df, dependent_column,
@@ -57,7 +58,8 @@ def fit(df, dependent_column,
         dummies_creation_drop_column_preference='dropFirst', # Available options dropFirst, dropMax, dropMin
         train_split_size = 0.7,
         max_features_to_select = 0,
-        random_state_to_use=100) :    # max_features_to_select=0 means Select all fields
+        random_state_to_use=100,
+        verbose=False) :    # max_features_to_select=0 means Select all fields
 
     data_for_auto_lr = df
     
@@ -72,9 +74,11 @@ def fit(df, dependent_column,
     df_categorical = data_for_auto_lr.select_dtypes(include=['object', 'category'])
     
     numerical_column_names =  [i for i in data_for_auto_lr.columns if not i in df_categorical.columns] 
-    print('vefore dummies='+str(data_for_auto_lr.columns))
+    if verbose:
+        print('before dummies='+str(data_for_auto_lr.columns))
     data_for_auto_lr = createDummies(data_for_auto_lr, dummies_creation_drop_column_preference)
-    print('after dummies='+str(data_for_auto_lr.columns))
+    if verbose:
+        print('after dummies='+str(data_for_auto_lr.columns))
     ## Scale numerical Feature scaling
     scaler = StandardScaler()
     if scale_numerical:
@@ -83,11 +87,15 @@ def fit(df, dependent_column,
         if include_target_column_from_scaling==True:
             data_for_auto_lr[[dependent_column]] = scaler.fit_transform(data_for_auto_lr[[dependent_column]])
     
+    if verbose:
+        print('Building model...')
+        
     # Model building starts here
     X = data_for_auto_lr.drop(dependent_column,1)
     y = data_for_auto_lr[dependent_column]
     
-    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=train_split_size , random_state=random_state_to_use)
+    train_split_size = (1-train_split_size)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=train_split_size, test_size=train_split_size, random_state=random_state_to_use)
     
     # Set max_features_to_select if not passed
     if max_features_to_select<=0 : # So no parameter passed, use all available column
@@ -107,6 +115,9 @@ def fit(df, dependent_column,
     column_to_remove = ""
     retain_columns = []
     
+    if verbose:
+        print('First Model afte RFE')
+                 
     exit_loop = False;
     while(not exit_loop):
         # Backward Elimination using Vif and p-value
@@ -116,7 +127,8 @@ def fit(df, dependent_column,
         X_train_sm = sm.add_constant(X_train_sm)
         
         lm_1 = sm.OLS(y_train, X_train_sm).fit()
-        print('R2=' + str(lm_1.rsquared) + ' R2Adj=' + str(lm_1.rsquared_adj) )
+        if verbose:
+            print('R2=' + str(lm_1.rsquared) + ' R2Adj=' + str(lm_1.rsquared_adj) )
         
         # Lets predict on test data
         x_test_sm = X_test[columns_to_use_further]
@@ -130,12 +142,15 @@ def fit(df, dependent_column,
         if model_iteration==0:
             prev_adj_r2 = lm_1.rsquared_adj
             model_iteration_info.loc[model_iteration]=[comment, lm_1.rsquared, lm_1.rsquared_adj, rmse_test, r2_test]
+            
         else:
             change_in_adjr2 = prev_adj_r2 - lm_1.rsquared_adj
             if change_in_adjr2 > acceptable_r2_change : # Put back the column
                 columns_to_use_further = columns_to_use_further + [column_to_remove]
                 retain_columns = retain_columns + [column_to_remove]
-                model_iteration_info.loc[model_iteration]=['Degraded Adj R2, Putting back feature '+str(column_to_remove)+"(" + comment + ")", lm_1.rsquared, lm_1.rsquared_adj, rmse_test, r2_test ]
+                model_iteration_info.loc[model_iteration]=['Degraded Adj R2, Putting back feature '+str(column_to_remove)+"(Reverting " + comment + ")", lm_1.rsquared, lm_1.rsquared_adj, rmse_test, r2_test ]
+                if verbose:
+                    print(model_iteration_info.loc[model_iteration]['comment'])
                 # rebuild the model by putting back the last removed column
                 X_train_sm = X_train[columns_to_use_further]
                 X_train_sm = sm.add_constant(X_train_sm)            
@@ -160,18 +175,34 @@ def fit(df, dependent_column,
             p_value_found = p_values_df_filtered[p_values_df_filtered['Feature']==vif_with_high_value]
             if len(p_value_found)>0 : # Common name found in feature in p-value df and vif df
                 column_to_remove = vif_with_high_value
+                #print('Found in both vif and p-value df')
                 break # No need to check further
         
         if column_to_remove=="" and len(p_values_df_filtered)>0: # There is no column column left in vif and df
             column_to_remove = p_values_df_filtered.iloc[0]['Feature']
+            #print('Found in p-value df')
             
         if column_to_remove=="" and len(vif_df_filtered)>0: # Still no column selected indicates all column are significant with low p-value
-            column_to_remove = vif_df_filtered.iloc[0]['Feature']    
-            print(vif_with_high_value)
+            for index, row in vif_df_filtered.iterrows():
+                aVifFeature = row[0] 
+                p_valueOfThatFeature = p_values_df[p_values_df['Feature']==aVifFeature]
+                p_valueOfThatFeature  = p_valueOfThatFeature['p-value']
+                #print(p_valueOfThatFeature)
+                p_valueOfThatFeature = p_valueOfThatFeature[:,np.newaxis]
+                #print(p_valueOfThatFeature)
+                                
+                if p_valueOfThatFeature[0][0]>0 :
+                    column_to_remove = vif_df_filtered.iloc[0]['Feature']
+                    #print(p_valueOfThatFeature[0][0])
+                    break
         
         if column_to_remove!="":
             columns_to_use_further.remove(column_to_remove)
             comment = 'Removing ' + column_to_remove + ' with Vif=' + str(vif_df[(vif_df['Feature']==column_to_remove)].iloc[0]['Vif']) + ' p-value=' + str(p_values_df[(p_values_df['Feature']==column_to_remove)].iloc[0]['p-value'])
+            if verbose:
+                print(comment)
+            #print(vif_df)
+            #print(p_values_df)
            
         if column_to_remove == "" or len(columns_to_use_further)==0:
             exit_loop = True
@@ -201,5 +232,5 @@ def fit(df, dependent_column,
     response_dictionary['vif-values'] = calculate_vif(X_train[columns_to_use_further])
     
     response_dictionary['rmse_test'] = rmse_test
-    
+    print('Done')
     return response_dictionary

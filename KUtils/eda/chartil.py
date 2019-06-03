@@ -59,6 +59,8 @@ def plot(df, column_list, chart_type=None, optional_settings={}):
     
     if chart_type=='heatmap':
         local_heatmap(df, numerical_columns, optional_settings)
+    elif chart_type=='pairplot':
+        multi_pairplot(df, column_list, optional_settings)
     else :  
         if len(column_list)==1: # Univariate
             if len(categorical_columns)>0 : 
@@ -95,6 +97,8 @@ def plot(df, column_list, chart_type=None, optional_settings={}):
             else: # One is continous and other is categorical
                 if chart_type=='distplot' :
                     bi_continuous_category_distplot(df, numerical_columns[0], categorical_columns[0])
+                elif chart_type=='violinplot' :
+                    bi_continuous_category_violinplot(df, numerical_columns[0], categorical_columns[0])
                 else:
                     bi_continuous_category_boxplot(df, numerical_columns[0], categorical_columns[0])
                 # Todo: What about other combination? category vs continuous
@@ -117,7 +121,8 @@ def plot(df, column_list, chart_type=None, optional_settings={}):
                     multi_continuous_continuous_continuous_category_bubbleplot(df, numerical_columns[0], numerical_columns[1], numerical_columns[2], categorical_columns[0])
                 else:
                     multi_continuous_continuous_continuous_category_scatterplot(df, numerical_columns[0], numerical_columns[1], numerical_columns[2], categorical_columns[0])
-                # Todo: other combinations? 
+            else:
+                 local_heatmap(df, numerical_columns, optional_settings)
         elif len(column_list)==5:
             if len(numerical_columns)==2 :
                 multi_category_category_category_continuous_continuous_pairplot(df, categorical_columns[0], categorical_columns[1], categorical_columns[2],
@@ -154,7 +159,21 @@ def local_heatmap(df, column_list, optional_settings={}) :
         
     sns.heatmap(data_for_corelation, annot=True) 
 
-
+def multi_pairplot(df, column_list, optional_settings={}) :
+    include_categorical = False
+    if optional_settings.get('include_categorical')!=None:
+        include_categorical = optional_settings.get('include_categorical')
+    if include_categorical:
+        df = utils.createDummies(df)
+        column_list = df.columns.tolist() 
+    group_by_last_column = False
+    if optional_settings.get('group_by_last_column')!=None:
+        group_by_last_column = optional_settings.get('group_by_last_column') 
+    if group_by_last_column==True:
+        sns.pairplot(df[column_list], hue=column_list[-1])
+    else :
+        sns.pairplot(df[column_list])
+    
 def add_value_labels(ax, spacing=5, include_percentage=True):
     """Add labels to the end of each bar in a bar chart.
 
