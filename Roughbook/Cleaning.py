@@ -45,3 +45,6 @@ for col in column_to_convert_to_categorical:
 # Reload the library package function
 import importlib
 importlib.reload(module)
+
+# Set decimal places precision to 3 digit (Gloabl effect)
+pd.options.display.float_format = '{:,.3f}'.format
