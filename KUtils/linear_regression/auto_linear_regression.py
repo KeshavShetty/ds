@@ -59,6 +59,7 @@ def fit(df, dependent_column,
         train_split_size = 0.7,
         max_features_to_select = 0,
         random_state_to_use=100,
+        include_data_in_return = False,
         verbose=False) :    # max_features_to_select=0 means Select all fields
 
     data_for_auto_lr = df
@@ -192,7 +193,8 @@ def fit(df, dependent_column,
                 #print(p_valueOfThatFeature)
                                 
                 if p_valueOfThatFeature[0][0]>0 :
-                    column_to_remove = vif_df_filtered.iloc[0]['Feature']
+                    column_to_remove = aVifFeature 
+                    #print('column_to_remove='+column_to_remove)
                     #print(p_valueOfThatFeature[0][0])
                     break
         
@@ -215,6 +217,10 @@ def fit(df, dependent_column,
     
     lm_1 = sm.OLS(y_train, X_train_sm).fit()
     
+    if verbose:
+        print('\nLinear Regression Params & Detailed Summary\n')
+        print(lm_1.summary())
+    
     # Lets predict on test data
     x_test_sm = X_test[columns_to_use_further]
     x_test_sm  = sm.add_constant(x_test_sm)
@@ -232,5 +238,12 @@ def fit(df, dependent_column,
     response_dictionary['vif-values'] = calculate_vif(X_train[columns_to_use_further])
     
     response_dictionary['rmse_test'] = rmse_test
+    
+    response_dictionary['model_summary'] = lm_1.summary()
+    
+    if include_data_in_return:
+        response_dictionary['final_input_data'] = data_for_auto_lr
+        response_dictionary['features_in_final_model'] = columns_to_use_further
+    
     print('Done')
     return response_dictionary
