@@ -124,6 +124,8 @@ Demo code:
 	chartil.plot(heart_disease_df, ['sex','cp','target','thalach','trestbps']) # Paired scatter plot
 ![Grouped Paired_3d_grouped_scatter](https://raw.githubusercontent.com/KeshavShetty/ds/master/Roughbook/misc_resources/paired_3d_grouped_scatter.png)
 
+# Full working demo available on [kaggle here](https://www.kaggle.com/keshavshetty/chart-util-chartil)
+
 </details>
 
 
