@@ -128,5 +128,48 @@ Demo code:
 
 
 <details><summary>Auto Linear Regression (Click to expand)</summary>
-	Todo:
+
+# Auto Linear Regression
+
+#### We have seen Auto ML like H2O which is a blackbox approach to generate models. 
+During our model building process, we try with brute force/TrialnError/several combinations to come up with best model. 
+However trying these possibilities manually is a laborious process.
+In order to overcome or atleast have a base model automatically I developed this auto linear regression using backward feature elimination technique.
+
+The library/package can be found [here](https://pypi.org/project/kesh-utils/) and source code [here](https://github.com/KeshavShetty/ds/tree/master/KUtils/linear_regression)
+
+# How Auto LR works?
+
+We throw the cleaned dataset to autolr.fit(<<parameters>>)
+The method will 
+- Treat categorical variable if applicable(dummy creation/One hot encoding)
+- First model - Run the RFE on dataset
+- For remaining features elimination - it follows backward elimination - one feature at a time
+    - combination of vif and p-values of coefficients (Eliminate with higher vif and p-value combination
+    - vif only (or eliminate one with higher vif)
+    - p-values only (or eliminate one with higher p-value)
+- Everytime when a feature is identified we build new model and repeat the process
+- on every iteration if adjusted R2 affected significantly, we re-add/retain it and select next possible feature to eliminate.
+- Repeat until program can't proceed further with above logic.
+
+# Auto Linear Regression Package/Function details
+
+The method <b><u>autolr.fit()</u></b> has below parameters
+- df, (The full dataframe)
+- dependent_column, (Target column)
+- p_value_cutoff = 0.01, (Threashold p-values of features to use while filtering features during backward elimination step, Default 0.01)
+- vif_cutoff = 5, (Threashold co-relation of vif values of features to use while filtering features during backward elimination step, Default 5)
+- acceptable_r2_change = 0.02, (Restrict degradtion of model efficiency by controlling loss of change in R2, Default 0.02)
+- scale_numerical = False, (Flag to convert/scale numerical fetures using StandardScaler)
+- include_target_column_from_scaling = True, (Flag to indiacte weather to include target column from scaling)
+- dummies_creation_drop_column_preference='dropFirst', (Available options dropFirst, dropMax, dropMin - While creating dummies which clum drop to convert to one hot)
+- train_split_size = 0.7, (Train/Test split ration to be used)
+- max_features_to_select = 0, (Set the number of features to be qualified from RFE before entring auto backward elimination)
+- random_state_to_use=100, (Self explanatory)
+- include_data_in_return = False, (Include the data generated/used in Auto LR which might have gobne thru scaling, dummy creation etc.)
+- verbose=False (Enable to print detailed debug messgaes)
+
+Above method returns 'model_info' dictionary which will have all the details used while performing auto fit. 
+
+# Full working demo available on [kaggle here](https://www.kaggle.com/keshavshetty/auto-linear-regression)
 </details>
