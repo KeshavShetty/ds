@@ -109,18 +109,18 @@ def fit(df, dependent_column,
     columns_to_use_further = X_train.columns[rfe.support_]
     columns_to_use_further = columns_to_use_further.tolist()
     
+    if verbose:
+        print('First Model afte RFE')
+        
     comment = 'After RFE(' + str(max_features_to_select) + ")" + str(columns_to_use_further)
-    model_iteration_info = pd.DataFrame( columns=['comment','r2_train', 'r2_adj_train', 'rmse_test', 'r2_test'])
+    model_iteration_info = pd.DataFrame( columns=['comment','r2_train', 'r2_adj_train', 'aic', 'bic', 'p_value_fstat', 'rmse_test', 'r2_test'])
     model_iteration=0
     prev_adj_r2 = 1
     column_to_remove = ""
     retain_columns = []
-    
-    if verbose:
-        print('First Model afte RFE')
                  
-    exit_loop = False;
-    while(not exit_loop):
+    no_more_backward_elimination_possible = False;
+    while(not no_more_backward_elimination_possible):
         # Backward Elimination using Vif and p-value
         
         # Chec k p-value using stat
@@ -128,6 +128,7 @@ def fit(df, dependent_column,
         X_train_sm = sm.add_constant(X_train_sm)
         
         lm_1 = sm.OLS(y_train, X_train_sm).fit()
+        
         if verbose:
             print('R2=' + str(lm_1.rsquared) + ' R2Adj=' + str(lm_1.rsquared_adj) )
         
@@ -142,7 +143,7 @@ def fit(df, dependent_column,
         
         if model_iteration==0:
             prev_adj_r2 = lm_1.rsquared_adj
-            model_iteration_info.loc[model_iteration]=[comment, lm_1.rsquared, lm_1.rsquared_adj, rmse_test, r2_test]
+            model_iteration_info.loc[model_iteration]=[comment, lm_1.rsquared, lm_1.rsquared_adj, lm_1.aic, lm_1.bic, lm_1.f_pvalue, rmse_test, r2_test]
             
         else:
             change_in_adjr2 = prev_adj_r2 - lm_1.rsquared_adj
@@ -159,7 +160,7 @@ def fit(df, dependent_column,
             else :
                 prev_adj_r2 = lm_1.rsquared_adj
                 retain_columns = [] # Reset columns to retain in this iteration
-                model_iteration_info.loc[model_iteration]=[comment, lm_1.rsquared, lm_1.rsquared_adj, rmse_test, r2_test]
+                model_iteration_info.loc[model_iteration]=[comment, lm_1.rsquared, lm_1.rsquared_adj, lm_1.aic, lm_1.bic, lm_1.f_pvalue, rmse_test, r2_test]
                 
         
         p_values_df = pd.DataFrame({'Feature':lm_1.pvalues.index, 'p-value':lm_1.pvalues.values}).sort_values(by='p-value', axis=0, ascending=False, inplace=False)
@@ -207,7 +208,7 @@ def fit(df, dependent_column,
             #print(p_values_df)
            
         if column_to_remove == "" or len(columns_to_use_further)==0:
-            exit_loop = True
+            no_more_backward_elimination_possible = True
             
         model_iteration = model_iteration + 1
     
@@ -229,7 +230,7 @@ def fit(df, dependent_column,
     rmse_test = np.sqrt(mean_squared_error(y_test, y_pred_final))
     r2_test = r2_score(y_test, y_pred_final)
     
-    model_iteration_info.loc[model_iteration]=['Final Model with '+str(columns_to_use_further), lm_1.rsquared, lm_1.rsquared_adj, rmse_test, r2_test]
+    model_iteration_info.loc[model_iteration]=['Final Model with '+str(columns_to_use_further), lm_1.rsquared, lm_1.rsquared_adj, lm_1.aic, lm_1.bic, lm_1.f_pvalue, rmse_test, r2_test]
     
     response_dictionary['model_iteration_info'] = model_iteration_info
     response_dictionary['r2_test'] = r2_test
