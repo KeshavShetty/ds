@@ -150,7 +150,7 @@ def fit(df, dependent_column,
             if change_in_adjr2 > acceptable_r2_change : # Put back the column
                 columns_to_use_further = columns_to_use_further + [column_to_remove]
                 retain_columns = retain_columns + [column_to_remove]
-                model_iteration_info.loc[model_iteration]=['Degraded Adj R2, Putting back feature '+str(column_to_remove)+"(Reverting " + comment + ")", lm_1.rsquared, lm_1.rsquared_adj, rmse_test, r2_test ]
+                model_iteration_info.loc[model_iteration_info.shape[0]]=['Degraded Adj R2, Putting back feature '+str(column_to_remove)+"(Reverting " + comment + ")", lm_1.rsquared, lm_1.rsquared_adj, lm_1.aic, lm_1.bic, lm_1.f_pvalue, rmse_test, r2_test ]
                 if verbose:
                     print(model_iteration_info.loc[model_iteration]['comment'])
                 # rebuild the model by putting back the last removed column
