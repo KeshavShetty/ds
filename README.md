@@ -175,3 +175,39 @@ Above method returns 'model_info' dictionary which will have all the details use
 
 # Full working demo available on [kaggle here](https://www.kaggle.com/keshavshetty/auto-linear-regression)
 </details>
+
+<details><summary>Clustered Linear Regression (Click to expand)</summary>
+# Clustered Linear Regression
+
+For a linear regression approach we try to fit a best model on entire dataset. 
+However often we have seen within dataset based on a particular feature the dataset behaves totally different and single model is not the best solutions, 
+instead have multiple model which applied on different subset or filtered data does better.
+
+
+# How to find the feature which splits the dataset into multiple sub dataset (and there after build and apply different models)
+
+There is no easy solution, instead use trial and error or brute force to subset data on different feature and build multiple model. 
+This clustred or grouped Linear Regression does the same. 
+You send the entire dataset and specifiy list of columns to separate the dataset individually and return the kpi measures like rmse or r2 etc and then decide which way to go.
+
+
+# How "Clustered Linear Regression" works?
+
+- First it lists possible combinations 
+- For each possible combinations split the data into subset
+- For each subset execute the Auto Linear Regression. Check previous kaggle post on this.
+- Return summary or consolidated kpi measures at group level.
+
+# The API clustlr.fit() has below parameters
+
+- data_df (Full dataset)
+- feature_group_list (List of column on which filter and group the data
+- dependent_column (The target column)
+- max_level = 2 (When it is 2 it uses two feature combination to filter)
+- min_leaf_in_filtered_dataset=1000 (Condition the minimum datapoints in subgroup without which autolr will not be executed)
+- no_of_bins_for_continuous_feature=10 (number of bins to be created when you use continuous varibale for grouping)
+- verbose (Use True if you want detailed debug/log message)
+
+# Full working demo available on [kaggle here](https://www.kaggle.com/keshavshetty/clustered-linear-regression)
+	
+<details>

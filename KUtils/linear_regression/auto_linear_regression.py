@@ -39,14 +39,14 @@ def createDummies(df, dummies_creation_drop_column_preference='dropFirst') :
         elif dummies_creation_drop_column_preference=='dropMax' :
             column_with_max_records = aCatColumnName + "_" + df[aCatColumnName].value_counts().idxmax()
             dummy_df = dummy_df.drop(column_with_max_records, 1)
-        elif dummies_creation_drop_column_preference=='dropMin' :
+        elif dummies_creation_drop_column_preference=='dropMin' :            
             column_with_min_records = aCatColumnName + "_" + df[aCatColumnName].value_counts().idxmin()
             dummy_df = dummy_df.drop(column_with_min_records, 1)
         else :
             raise Exception('Invalid value passed for dummies_creation_drop_column_preference. Valid options are: dropFirst, dropMax, dropMin')
         df = pd.concat([df, dummy_df], axis=1)
         df.drop([aCatColumnName], axis=1, inplace=True)
-    print('Dummy creation done')
+    #print('Dummy creation done')
     return df
 
 def fit(df, dependent_column,
@@ -246,5 +246,5 @@ def fit(df, dependent_column,
         response_dictionary['final_input_data'] = data_for_auto_lr
         response_dictionary['features_in_final_model'] = columns_to_use_further
     
-    print('Done')
+    # print('Done')
     return response_dictionary

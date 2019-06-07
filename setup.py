@@ -13,7 +13,7 @@ with open(os.path.join(HERE, "README.md")) as fid:
 # This call to setup() does all the work
 setup(
     name="kesh-utils",
-    version="0.3.0",
+    version="0.3.4",
     description="Kesh Utils for Data science/EDA/Data preparation ",
     long_description=README,
     long_description_content_type="text/markdown",
