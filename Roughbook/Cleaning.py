@@ -42,9 +42,27 @@ column_to_convert_to_categorical = ['target', 'cp', 'fbs', 'exang', 'restecg', '
 for col in column_to_convert_to_categorical:
     heart_disease_df[col] = heart_disease_df[col].astype('category')
 
+# Comvert string to Numeric and make nan when applicable
+telecom['TotalCharges'] = pd.to_numeric(telecom['TotalCharges'], errors='coerce')
+
+	
+	
 # Reload the library package function
 import importlib
 importlib.reload(module)
 
 # Set decimal places precision to 3 digit (Gloabl effect)
 pd.options.display.float_format = '{:,.3f}'.format
+
+# Merge two dataframe with a primary key
+df_1 = pd.merge(churn_data, customer_data, how='inner', on='customerID' )
+
+# Remove nan values from TotalCharges
+telecom = telecom[~np.isnan(telecom['TotalCharges'])]
+
+# Describe by percentile
+num_telecom.describe(percentiles=[0.25, 0.5, 0.75, 0.90, 0.95, 0.99])
+
+# Select one or few column from dataframe
+df.loc[:, ~df.columns.isin(['col1', 'col2'])]
+

@@ -1,53 +1,15 @@
 # Required imports
 import numpy as np
 import pandas as pd
+
+from KUtils.common import utils as cutils
+
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from sklearn.feature_selection import RFE
 from sklearn.linear_model import LinearRegression
 import statsmodels.api as sm
 from sklearn.metrics import mean_squared_error, r2_score
-
-def calculate_vif(input_data, exclude_columns=[]):
-    vif_df = pd.DataFrame( columns=['Feature','Vif'])
-    x_vars = input_data.drop(exclude_columns, axis=1)
-    xvar_names = x_vars.columns
-    if len(xvar_names)>1: # Atlease 2 x column should be there to calculate vif
-        for i in range(0,xvar_names.shape[0]):
-            y=x_vars[xvar_names[i]]
-            x=x_vars[xvar_names.drop(xvar_names[i])]        
-            rsq=sm.OLS(y,x).fit().rsquared
-            vif=round(1/(1-rsq),2)
-            vif_df.loc[i]=[xvar_names[i],vif]
-    return vif_df.sort_values(by='Vif', axis=0, ascending=False, inplace=False)
-
-def standardize(x):
-    return ((x-np.mean(x))/np.std(x))
-
-def createDummies(df, dummies_creation_drop_column_preference='dropFirst') :
-    ## Convert Categorical variables 
-    df_categorical = df.select_dtypes(include=['object', 'category'])
-    
-    categorical_column_names = df_categorical.columns
-    
-    for aCatColumnName in categorical_column_names:
-        #print(aCatColumnName)
-        dummy_df = pd.get_dummies(df[aCatColumnName], prefix=aCatColumnName)
-    
-        if dummies_creation_drop_column_preference=='dropFirst' :
-            dummy_df = dummy_df.drop(dummy_df.columns[0], 1)
-        elif dummies_creation_drop_column_preference=='dropMax' :
-            column_with_max_records = aCatColumnName + "_" + df[aCatColumnName].value_counts().idxmax()
-            dummy_df = dummy_df.drop(column_with_max_records, 1)
-        elif dummies_creation_drop_column_preference=='dropMin' :            
-            column_with_min_records = aCatColumnName + "_" + df[aCatColumnName].value_counts().idxmin()
-            dummy_df = dummy_df.drop(column_with_min_records, 1)
-        else :
-            raise Exception('Invalid value passed for dummies_creation_drop_column_preference. Valid options are: dropFirst, dropMax, dropMin')
-        df = pd.concat([df, dummy_df], axis=1)
-        df.drop([aCatColumnName], axis=1, inplace=True)
-    #print('Dummy creation done')
-    return df
 
 def fit(df, dependent_column,
         p_value_cutoff = 0.01,
@@ -77,7 +39,7 @@ def fit(df, dependent_column,
     numerical_column_names =  [i for i in data_for_auto_lr.columns if not i in df_categorical.columns] 
     if verbose:
         print('before dummies='+str(data_for_auto_lr.columns))
-    data_for_auto_lr = createDummies(data_for_auto_lr, dummies_creation_drop_column_preference)
+    data_for_auto_lr = cutils.createDummies(data_for_auto_lr, dummies_creation_drop_column_preference, exclude_columns=[dependent_column])
     if verbose:
         print('after dummies='+str(data_for_auto_lr.columns))
     ## Scale numerical Feature scaling
@@ -95,8 +57,8 @@ def fit(df, dependent_column,
     X = data_for_auto_lr.drop(dependent_column,1)
     y = data_for_auto_lr[dependent_column]
     
-    train_split_size = (1-train_split_size)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=train_split_size, test_size=train_split_size, random_state=random_state_to_use)
+    test_split_size = (1-train_split_size)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=train_split_size, test_size=test_split_size, random_state=random_state_to_use)
     
     # Set max_features_to_select if not passed
     if max_features_to_select<=0 : # So no parameter passed, use all available column
@@ -167,7 +129,7 @@ def fit(df, dependent_column,
         p_values_df = p_values_df[(~p_values_df['Feature'].isin(retain_columns))]
         p_values_df_filtered = p_values_df[(p_values_df['p-value']>p_value_cutoff) & (p_values_df['Feature']!='const')]
         
-        vif_df = calculate_vif(X_train[columns_to_use_further])
+        vif_df = cutils.calculate_vif(X_train[columns_to_use_further])
         vif_df = vif_df[(~vif_df['Feature'].isin(retain_columns))]
         vif_df_filtered = vif_df[(vif_df['Vif']>vif_cutoff)] # Already in asceinding order
         
@@ -219,7 +181,7 @@ def fit(df, dependent_column,
     lm_1 = sm.OLS(y_train, X_train_sm).fit()
     
     if verbose:
-        print('\nLinear Regression Params & Detailed Summary\n')
+        print('\nFinal Linear Regression Model Stat & Detailed Summary\n')
         print(lm_1.summary())
     
     # Lets predict on test data
@@ -236,7 +198,7 @@ def fit(df, dependent_column,
     response_dictionary['r2_test'] = r2_test
     response_dictionary['p-values'] =  pd.DataFrame({'Feature':lm_1.pvalues.index, 'p-value':lm_1.pvalues.values}).sort_values(by='p-value', axis=0, ascending=False, inplace=False)
 
-    response_dictionary['vif-values'] = calculate_vif(X_train[columns_to_use_further])
+    response_dictionary['vif-values'] = cutils.calculate_vif(X_train[columns_to_use_further])
     
     response_dictionary['rmse_test'] = rmse_test
     

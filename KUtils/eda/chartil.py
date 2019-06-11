@@ -50,15 +50,17 @@ base_color_list = ['green', 'red', 'blue', 'orange', 'purple', 'brown', 'pink', 
 save_images = False
 default_image_save_location = "d:\\temp\\plots"
 default_dpi = 100
+
+
   
-def plot(df, column_list, chart_type=None, optional_settings={}):    
+def plot(df, column_list=[], chart_type=None, optional_settings={}):    
     # Categorical column names
     categorical_columns = df[column_list].select_dtypes(include=['category', object]).columns.tolist()
     # Numerical/Continous column names 
     numerical_columns = [item for item in column_list if item not in categorical_columns]
     
-    if chart_type=='heatmap':
-        local_heatmap(df, numerical_columns, optional_settings)
+    if chart_type=='heatmap' or len(column_list)==0:
+        local_heatmap(df, df.columns, optional_settings)
     elif chart_type=='pairplot':
         multi_pairplot(df, column_list, optional_settings)
     else :  
