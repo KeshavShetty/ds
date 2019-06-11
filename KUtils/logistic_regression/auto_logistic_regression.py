@@ -2,6 +2,8 @@
 import numpy as np
 import pandas as pd
 
+import matplotlib.pyplot as plt
+
 from KUtils.common import utils as cutils
 
 from sklearn.preprocessing import StandardScaler
@@ -79,7 +81,7 @@ def fit(df, dependent_column,
         vif_cutoff = 5,
         model_performance_matrix='accuracy', # accuracy, sensitivity, specificity, precision, recall, f1_score, roc_auc 
         acceptable_model_performance = 0.02,
-        cutoff_using = 'Sensitivity-Specificity',
+        cutoff_using = 'Sensitivity-Specificity', # Optiona are 'Sensitivity-Specificity' and 'Precision-Recall'
         scale_numerical = False,
         default_list_of_columns_to_retain = [], # Columsn or features must in the model       
         dummies_creation_drop_column_preference='dropFirst', # Available options dropFirst, dropMax, dropMin
@@ -284,6 +286,7 @@ def fit(df, dependent_column,
     
     response_dictionary['cutoff_df'] = return_dictionary['cutoff_df']
     response_dictionary['confusion_matrix'] = final_confusion_matrix
+    response_dictionary['prediction_df'] = test_pred_df
     
     if include_data_in_return:
         response_dictionary['final_input_data'] = data_for_auto_lr
@@ -291,3 +294,24 @@ def fit(df, dependent_column,
     
     # print('Done')
     return response_dictionary
+
+# ROC curve in Python
+# Defining the function to plot the ROC curve
+def draw_roc( prediction_df ):
+    
+    actual = prediction_df['Actual']
+    probs = prediction_df['predicted']
+    fpr, tpr, thresholds = metrics.roc_curve( actual, probs,
+                                              drop_intermediate = False )
+    auc_score = metrics.roc_auc_score( actual, probs )
+    
+    plt.figure(figsize=(5, 5))
+    plt.plot( fpr, tpr, label='ROC curve (area = %0.2f)' % auc_score )
+    plt.plot([0, 1], [0, 1], 'k--')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate or [1 - True Negative Rate]')
+    plt.ylabel('True Positive Rate')
+    plt.title('Receiver operating characteristic example')
+    plt.legend(loc="lower right")
+    plt.show()
