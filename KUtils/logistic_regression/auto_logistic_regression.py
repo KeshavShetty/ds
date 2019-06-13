@@ -79,7 +79,7 @@ def calculateGLMKpis(pred_df, cutoff_by='Precision-Recall', include_cutoff_df_in
 def fit(df, dependent_column,
         p_value_cutoff = 0.01,
         vif_cutoff = 5,
-        model_performance_matrix='accuracy', # accuracy, sensitivity, specificity, precision, recall, f1_score, roc_auc 
+        scoring='accuracy', # accuracy, sensitivity, specificity, precision, recall, f1_score, roc_auc 
         acceptable_model_performance = 0.02,
         cutoff_using = 'Sensitivity-Specificity', # Optiona are 'Sensitivity-Specificity' and 'Precision-Recall'
         scale_numerical = False,
@@ -166,11 +166,11 @@ def fit(df, dependent_column,
         return_dictionary = calculateGLMKpis(test_pred_df, cutoff_by=cutoff_using)
 
         if verbose:
-            print('probability_cutoff=' + str(return_dictionary['probability_cutoff']) + ' '+ model_performance_matrix + '=' + str(return_dictionary[model_performance_matrix]) )
+            print('probability_cutoff=' + str(return_dictionary['probability_cutoff']) + ' '+ scoring + '=' + str(return_dictionary[scoring]) )
         
         
         if model_iteration==0:
-            prev_performance = return_dictionary[model_performance_matrix]
+            prev_performance = return_dictionary[scoring]
             model_iteration_info.loc[model_iteration]=[comment, return_dictionary['probability_cutoff'], 
                                      return_dictionary['accuracy'], return_dictionary['sensitivity'], 
                                      return_dictionary['specificity'], return_dictionary['precision'], 
@@ -178,7 +178,7 @@ def fit(df, dependent_column,
                                      return_dictionary['roc_auc']]
             
         else:
-            change_in_performance = abs(prev_performance - return_dictionary[model_performance_matrix])
+            change_in_performance = abs(prev_performance - return_dictionary[scoring])
             if change_in_performance > acceptable_model_performance : # Put back the column
                 columns_to_use_further = columns_to_use_further + [column_to_remove]
                 retain_columns = retain_columns + [column_to_remove]
@@ -194,7 +194,7 @@ def fit(df, dependent_column,
                 X_train_sm = sm.add_constant(X_train_sm) 
                 glm_1 = sm.GLM(y_train, X_train_sm, family=sm.families.Binomial()).fit()
             else :
-                prev_performance = return_dictionary[model_performance_matrix]
+                prev_performance = return_dictionary[scoring]
                 retain_columns = default_list_of_columns_to_retain # Reset columns to retain in this iteration
                 model_iteration_info.loc[model_iteration]=[comment, return_dictionary['probability_cutoff'], 
                                      return_dictionary['accuracy'], return_dictionary['sensitivity'], 
