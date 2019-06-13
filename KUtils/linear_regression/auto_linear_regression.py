@@ -15,6 +15,7 @@ def fit(df, dependent_column,
         p_value_cutoff = 0.01,
         vif_cutoff = 5,
         acceptable_r2_change = 0.02,
+        default_list_of_columns_to_retain = [],
         scale_numerical = False,
         include_target_column_from_scaling = True,
         dummies_creation_drop_column_preference='dropFirst', # Available options dropFirst, dropMax, dropMin
@@ -79,7 +80,7 @@ def fit(df, dependent_column,
     model_iteration=0
     prev_adj_r2 = 1
     column_to_remove = ""
-    retain_columns = []
+    retain_columns = default_list_of_columns_to_retain
                  
     no_more_backward_elimination_possible = False;
     while(not no_more_backward_elimination_possible):
@@ -121,7 +122,7 @@ def fit(df, dependent_column,
                 lm_1 = sm.OLS(y_train, X_train_sm).fit()
             else :
                 prev_adj_r2 = lm_1.rsquared_adj
-                retain_columns = [] # Reset columns to retain in this iteration
+                retain_columns = default_list_of_columns_to_retain # Reset columns to retain in this iteration
                 model_iteration_info.loc[model_iteration]=[comment, lm_1.rsquared, lm_1.rsquared_adj, lm_1.aic, lm_1.bic, lm_1.f_pvalue, rmse_test, r2_test]
                 
         
