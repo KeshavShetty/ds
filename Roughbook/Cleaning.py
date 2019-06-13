@@ -66,3 +66,12 @@ num_telecom.describe(percentiles=[0.25, 0.5, 0.75, 0.90, 0.95, 0.99])
 # Select one or few column from dataframe
 df.loc[:, ~df.columns.isin(['col1', 'col2'])]
 
+# Sort dataframe by columns
+newd_sorted_df = df.sort_values(by=['col1','col2'], ascending=[False,True]) # Sort col1 Descending and col2 by ascending
+
+from imblearn.over_sampling import SMOTE
+sm = SMOTE(random_state=2)
+X_train_res, y_train_res = sm.fit_sample(X_train, y_train)
+
+# Format decimal numbers
+print("Accuracy {0:.3f}, Precision {1:.3f}, Recall {2:.3f}, f1_score {3:.3f}, roc_auc {4:.3f}, Sensitivity {5:.3f}, Specificity {6:.3f}".format(accuracy, precision,recall,f1_score,roc_auc,sensitivity,specificity))
