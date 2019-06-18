@@ -27,14 +27,17 @@ def tree_classfier_single_hyperparameter_tuning(X_train, y_train,
     dtree = classifier_algo
 
     # fit tree on training data
-    treeGrid = GridSearchCV(dtree, parameters, cv=cv_folds, scoring=model_scoring, refit='Precision', return_train_score=True)
+    treeGrid = GridSearchCV(dtree, parameters, cv=cv_folds, scoring=model_scoring, refit=refit, return_train_score=True, verbose = 1)
     treeGrid.fit(X_train, y_train)
 
     # scores of GridSearch CV
     scores = treeGrid.cv_results_
     
     plot_single_hyperparameter_tuning_result(scores, hyper_parameter_name, model_scoring)
-    
+
+    print("Best score", treeGrid.best_score_)
+    print("Best Estimator", treeGrid.best_estimator_)
+
     return scores
     
 def plot_single_hyperparameter_tuning_result(scores, hyper_parameter_name, model_scoring) :
@@ -49,7 +52,7 @@ def plot_single_hyperparameter_tuning_result(scores, hyper_parameter_name, model
     X_axis = np.array(scores['param_'+hyper_parameter_name].data, dtype=float)
     
     ax = plt.gca()
-    ax.set_xlim(min(X_axis), max(X_axis)+2)
+    ax.set_xlim(min(X_axis), max(X_axis))
     
     lowest_y_value=1
     
@@ -101,6 +104,9 @@ def tree_classfier_two_hyperparameter_tuning(X_train, y_train,
     scores = grid_search.cv_results_
 
     plot_two_hyperparameter_tuning_result(scores, param_grid, model_scoring)
+    
+    print("Best score", grid_search.best_score_)
+    print("Best Estimator", grid_search.best_estimator_)
     
     return scores
     
@@ -211,3 +217,47 @@ def plot_simple_two_hyperparameter_tuning_result(scores, param_grid, scorer='AUC
         plt.legend(['test score', 'train score'], loc='best')
         #plt.xscale('log')
 
+def iv_woe(df, columns_to_treat, target_column, value_preference='IV', drop_original_column=False, show_woe=False):
+    
+    #Empty Dataframe
+    iv_df = pd.DataFrame()
+    
+    #Extract Column Names
+    cols = columns_to_treat
+    
+    #Run WOE and IV on all the independent variables
+    for ivars in cols:
+        d0 = pd.DataFrame({'x': df[ivars], 'y': df[target_column]})
+        d = d0.groupby("x", as_index=False).agg({"y": ["count", "sum"]})
+        d.columns = ['Level', 'N', 'Events']
+        d['% of Events'] = d['Events'] / d['Events'].sum()
+        d['Non-Events'] = d['N'] - d['Events']
+        d['% of Non-Events'] = d['Non-Events'] / d['Non-Events'].sum()
+        d['WoE'] = np.log(d['% of Events']/d['% of Non-Events'])
+        # Todo: What is to be done when you have -inf or +inf (now replace with -1 or 1)
+        d=d.replace([-np.inf], -1)
+        d=d.replace([np.inf], 1)        
+        d['IV'] = d['WoE'] * (d['% of Events'] - d['% of Non-Events'])
+        
+        print("Information value of " + ivars + " is " + str(round(d['IV'].sum(),6)))
+        temp =pd.DataFrame({"Variable" : [ivars], 
+                            "IV" : [d['IV'].sum()]}, columns = ["Variable", "IV"])
+        iv_df=pd.concat([iv_df,temp], axis=0)
+
+        d.rename(columns={'WoE': ivars+'_WoE'}, inplace=True)
+        d.rename(columns={'IV': ivars+'_IV'}, inplace=True)
+        d.drop(['N', 'Events', '% of Events', 'Non-Events', '% of Non-Events'], axis=1, inplace=True)
+        
+        df = pd.merge(df, d, how='left', left_on =ivars, right_on='Level' )
+        df.drop(['Level'], axis=1, inplace=True)
+        if value_preference=='WoE': # Retain WoE
+            df.drop([ivars+'_IV'], axis=1, inplace=True)
+        else:
+            df.drop([ivars+'_WoE'], axis=1, inplace=True)
+        if drop_original_column==True:
+            df.drop([ivars], axis=1, inplace=True)
+
+        #Show WOE Table
+        if show_woe == True:
+            print(d)
+    return df, iv_df
