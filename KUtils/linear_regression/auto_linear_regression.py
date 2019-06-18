@@ -5,6 +5,7 @@ import pandas as pd
 from KUtils.common import utils as cutils
 
 from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split
 from sklearn.feature_selection import RFE
 from sklearn.linear_model import LinearRegression
@@ -17,6 +18,7 @@ def fit(df, dependent_column,
         acceptable_r2_change = 0.02,
         default_list_of_columns_to_retain = [],
         scale_numerical = False,
+        scaler_object = StandardScaler(),
         include_target_column_from_scaling = True,
         dummies_creation_drop_column_preference='dropFirst', # Available options dropFirst, dropMax, dropMin
         train_split_size = 0.7,
@@ -44,12 +46,12 @@ def fit(df, dependent_column,
     if verbose:
         print('after dummies='+str(data_for_auto_lr.columns))
     ## Scale numerical Feature scaling
-    scaler = StandardScaler()
+    #scaler = StandardScaler()
     if scale_numerical:
         numerical_column_names.remove(dependent_column)
-        data_for_auto_lr[numerical_column_names] = scaler.fit_transform(data_for_auto_lr[numerical_column_names])
+        data_for_auto_lr[numerical_column_names] = scaler_object.fit_transform(data_for_auto_lr[numerical_column_names])
         if include_target_column_from_scaling==True:
-            data_for_auto_lr[[dependent_column]] = scaler.fit_transform(data_for_auto_lr[[dependent_column]])
+            data_for_auto_lr[[dependent_column]] = scaler_object.fit_transform(data_for_auto_lr[[dependent_column]])
     
     if verbose:
         print('Building model...')
