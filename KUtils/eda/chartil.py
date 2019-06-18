@@ -152,7 +152,9 @@ def local_heatmap(df, column_list, optional_settings={}) :
     
     data_for_corelation = df[column_list].corr()
     
-    if optional_settings.get('sort_by_column')!=None:
+    if optional_settings.get('sort_by_label')!=None: 
+        print('todo') 
+    elif optional_settings.get('sort_by_column')!=None:
         sort_by_column = optional_settings.get('sort_by_column')
         #df_corr = heart_disease_df.corr()
         sort_a_column = data_for_corelation[sort_by_column].sort_values()
@@ -176,7 +178,7 @@ def multi_pairplot(df, column_list, optional_settings={}) :
     else :
         sns.pairplot(df[column_list])
     
-def add_value_labels(ax, spacing=5, include_percentage=True):
+def add_value_labels(ax, spacing=5, include_percentage=True, precision=0):
     """Add labels to the end of each bar in a bar chart.
 
     Arguments:
@@ -209,7 +211,8 @@ def add_value_labels(ax, spacing=5, include_percentage=True):
             va = 'top'
 
         # Use Y value as label and format number with one decimal place
-        label_value = "{:.0f}".format(y_value)
+        #'{:.{precision}f}'.format(y_value, precision)
+        label_value = '{:.{prec}f}'.format(y_value, prec=precision)
         if include_percentage:
             label_percent = "{:.2f}".format(y_value*100/total_count)
             label = label_value + ' (' + label_percent + '%)'
@@ -252,13 +255,17 @@ def core_barchart_from_series(aIndexSeries, optional_settings={}):
     
     if sort_by_value==False: # Use label as sorting
         data_for_chart = data_for_chart.sort_index()
+        
+    precision=0
+    if optional_settings.get('decimal_precision')!=None:
+        precision = optional_settings.get('decimal_precision')
             
     ax = data_for_chart.plot(kind='bar',
                                     figsize=(figuresize_width,figuresize_height),
                                     title=optional_settings.get('chart_title'))
     ax.set_xlabel(optional_settings.get('x_label'))
     ax.set_ylabel(optional_settings.get('y_label'))
-    add_value_labels(ax, include_percentage=False)
+    add_value_labels(ax, include_percentage=False, precision=precision)
     
 def uni_category_barchart(df, column_name, optional_settings={}): 
     # limit_bars_count_to=10000, sort_by_value=False):
