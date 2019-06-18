@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from KUtils.common import utils as cutils
 
 from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split
 from sklearn.feature_selection import RFE
 from sklearn.linear_model import LogisticRegression
@@ -83,6 +84,7 @@ def fit(df, dependent_column,
         acceptable_model_performance = 0.02,
         cutoff_using = 'Sensitivity-Specificity', # Optiona are 'Sensitivity-Specificity' and 'Precision-Recall'
         scale_numerical = False,
+        scaler_object = StandardScaler(),
         default_list_of_columns_to_retain = [], # Columsn or features must in the model       
         dummies_creation_drop_column_preference='dropFirst', # Available options dropFirst, dropMax, dropMin
         train_split_size = 0.7,
@@ -112,10 +114,11 @@ def fit(df, dependent_column,
     if verbose:
         print('after dummies='+str(data_for_auto_lr.columns))
     ## Scale numerical Feature scaling
-    scaler = StandardScaler()
     if scale_numerical:
         numerical_column_names.remove(dependent_column)
-        data_for_auto_lr[numerical_column_names] = scaler.fit_transform(data_for_auto_lr[numerical_column_names])
+        print('Scaling numerical columns:' + str(numerical_column_names) )
+        print('Scaling with '+str(scaler_object))
+        data_for_auto_lr[numerical_column_names] = scaler_object.fit_transform(data_for_auto_lr[numerical_column_names])
     
     if verbose:
         print('Building model...')
