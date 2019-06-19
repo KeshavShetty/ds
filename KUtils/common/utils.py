@@ -23,10 +23,10 @@ def createDummies(df, dummies_creation_drop_column_preference='dropFirst', exclu
         if dummies_creation_drop_column_preference=='dropFirst' :
             dummy_df = dummy_df.drop(dummy_df.columns[0], 1)
         elif dummies_creation_drop_column_preference=='dropMax' :
-            column_with_max_records = aCatColumnName + "_" + df[aCatColumnName].value_counts().idxmax()
+            column_with_max_records = aCatColumnName + "_" + str(df[aCatColumnName].value_counts().idxmax())
             dummy_df = dummy_df.drop(column_with_max_records, 1)
         elif dummies_creation_drop_column_preference=='dropMin' :
-            column_with_min_records = aCatColumnName + "_" + df[aCatColumnName].value_counts().idxmin()
+            column_with_min_records = aCatColumnName + "_" + str(df[aCatColumnName].value_counts().idxmin())
             dummy_df = dummy_df.drop(column_with_min_records, 1)
         else :
             raise Exception('Invalid value passed for dummies_creation_drop_column_preference. Valid options are: dropFirst, dropMax, dropMin')

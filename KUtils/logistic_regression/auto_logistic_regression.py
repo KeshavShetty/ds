@@ -14,6 +14,8 @@ from sklearn.linear_model import LogisticRegression
 import statsmodels.api as sm
 from sklearn import metrics
 
+from imblearn.over_sampling import SMOTE
+
 def calculateGLMKpis(pred_df, cutoff_by='Precision-Recall', include_cutoff_df_in_return=False) :  # cutoff_by='Sensitivity-Specificity'
     
     cutoff_df = pd.DataFrame( columns = ['Probability', 'Accuracy', 'Sensitivity','Specificity', 'Precision', 'Recall'])
@@ -49,7 +51,7 @@ def calculateGLMKpis(pred_df, cutoff_by='Precision-Recall', include_cutoff_df_in
                 probability_cutoff = row['Probability']
                 break
             
-    print(probability_cutoff)
+    print('probability_cutoff:' + str(probability_cutoff))
     # Use this as Threshold cutoff 
     pred_df['predicted'] = pred_df.Probability.map(lambda x: 1 if x > probability_cutoff else 0)
     
@@ -85,6 +87,7 @@ def fit(df, dependent_column,
         cutoff_using = 'Sensitivity-Specificity', # Optiona are 'Sensitivity-Specificity' and 'Precision-Recall'
         scale_numerical = False,
         scaler_object = StandardScaler(),
+        apply_smote = False,
         default_list_of_columns_to_retain = [], # Columsn or features must in the model       
         dummies_creation_drop_column_preference='dropFirst', # Available options dropFirst, dropMax, dropMin
         train_split_size = 0.7,
@@ -109,6 +112,8 @@ def fit(df, dependent_column,
     
     numerical_column_names =  [i for i in data_for_auto_lr.columns if not i in df_categorical.columns] 
     if verbose:
+        print('Numerical columns :' + str(numerical_column_names))
+        print('Categorical columns :' + str(df_categorical.columns))
         print('before dummies='+str(data_for_auto_lr.columns))
     data_for_auto_lr = cutils.createDummies(data_for_auto_lr, dummies_creation_drop_column_preference, exclude_columns=[dependent_column])
     if verbose:
@@ -130,6 +135,15 @@ def fit(df, dependent_column,
     test_split_size = (1-train_split_size)
     X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=train_split_size, test_size=test_split_size, random_state=random_state_to_use)
     
+    if apply_smote:
+        print('Before smote ' + str(X_train.shape))
+        smote = SMOTE(random_state=2)
+        X_train_res, y_train_res = smote.fit_sample(X_train, y_train)
+        # Convert X_train back as dataframe (Smote returns ndarray)
+        X_train = pd.DataFrame(X_train_res, columns=X_train.columns)
+        y_train = y_train_res
+        print('After smote ' + str(X_train.shape))
+        
     # Set max_features_to_select if not passed
     if max_features_to_select<=0 : # So no parameter passed, use all available column
         max_features_to_select = len(X_train.columns)-1
